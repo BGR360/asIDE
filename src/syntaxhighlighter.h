@@ -1,6 +1,7 @@
 #ifndef SYNTAXHIGHLIGHTER_H
 #define SYNTAXHIGHLIGHTER_H
 
+#include <QMap>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 
@@ -26,8 +27,11 @@ private:
     };
     QVector<HighlightingRule> highlightingRules;
 
-    QTextCharFormat keywordFormat;
     QTextCharFormat labelFormat;
+    QRegExp labelExpression;
+    QMap<QString, qint32> labels;
+
+    QTextCharFormat keywordFormat;
     QTextCharFormat includeFormat;
     QTextCharFormat includeFileFormat;
     QTextCharFormat singleLineCommentFormat;

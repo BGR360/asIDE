@@ -36,6 +36,8 @@ void DocumentHandler::setTarget(QQuickItem* target)
                 m_highligher = new SyntaxHighlighter(m_doc);
             else
                 m_highligher->setDocument(m_doc);
+
+            m_highligher->rehighlight();
         }
     }
     emit targetChanged();

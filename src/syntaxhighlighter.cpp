@@ -26,12 +26,6 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
         highlightingRules.append(rule);
     }
 
-    // Create a highlighting rule for E100 labels
-    labelFormat.setForeground(Qt::magenta);
-    rule.pattern = QRegExp("\\b^[A-Za-z]\\w*\\b");
-    rule.format = labelFormat;
-    highlightingRules.append(rule);
-
     // Create a highlighting rule for single-quoted characters
     quotationFormat.setForeground(Qt::darkYellow);
     rule.pattern = QRegExp("'.'");
@@ -60,9 +54,16 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
     rule.pattern = QRegExp("//[^\n]*");
     rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
+
+    // Create a highlighting rule for E100 labels
+    labelFormat.setForeground(Qt::magenta);
+    labelExpression = QRegExp("\\b^[A-Za-z]\\w*\\s");
+    rule.pattern = labelExpression;
+    rule.format = labelFormat;
+    highlightingRules.append(rule);
 }
 
-void SyntaxHighlighter::highlightBlock(const QString &text)
+void SyntaxHighlighter::highlightBlock(const QString& text)
 {
     foreach (const HighlightingRule &rule, highlightingRules) {
         QRegExp expression(rule.pattern);
@@ -72,7 +73,29 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
             if (length == 0)
                 break;
             setFormat(index, length, rule.format);
+
+            // If this is the label expression, keep track of it as a label
+            if (expression == labelExpression) {
+                QString label = text.mid(index, length);
+                if (!labels.contains(label)) {
+                    int lineNumber = currentBlock().blockNumber();
+                    labels[label] = lineNumber;
+                }
+            }
+
             index = expression.indexIn(text, index + length);
+        }
+    }
+
+    // Highlight all labels
+    QMap<QString, int>::const_iterator i = labels.constBegin();
+    for (; i != labels.constEnd(); ++i) {
+        QString label = i.key();
+        int length = label.length();
+        int index = text.indexOf(label);
+        while (index >= 0) {
+            setFormat(index, length, labelFormat);
+            index = text.indexOf(label, index + length);
         }
     }
 }
