@@ -5,7 +5,8 @@ QT += qml quick widgets
 CONFIG += c++11
 
 SOURCES += src/main.cpp \
-    src/documenthandler.cpp
+    src/documenthandler.cpp \
+    src/syntaxhighlighter.cpp
 
 RESOURCES += qml.qrc
 
@@ -16,4 +17,5 @@ QML_IMPORT_PATH = qml
 include(deployment.pri)
 
 HEADERS += \
-    src/documenthandler.h
+    src/documenthandler.h \
+    src/syntaxhighlighter.h

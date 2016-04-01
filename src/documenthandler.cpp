@@ -4,6 +4,9 @@
 #include <QtGui/QTextCursor>
 #include <QtGui/QFontDatabase>
 #include <QtCore/QFileInfo>
+#include <QtCore/QTextCodec>
+
+#include "syntaxhighlighter.h"
 
 DocumentHandler::DocumentHandler()
     : m_target(0)
@@ -15,7 +18,7 @@ DocumentHandler::DocumentHandler()
 {
 }
 
-void DocumentHandler::setTarget(QQuickItem *target)
+void DocumentHandler::setTarget(QQuickItem* target)
 {
     m_doc = 0;
     m_target = target;
@@ -24,21 +27,21 @@ void DocumentHandler::setTarget(QQuickItem *target)
 
     QVariant doc = m_target->property("textDocument");
     if (doc.canConvert<QQuickTextDocument*>()) {
-        QQuickTextDocument *qqdoc = doc.value<QQuickTextDocument*>();
+        QQuickTextDocument* qqdoc = doc.value<QQuickTextDocument*>();
         if (qqdoc)
         {
             m_doc = qqdoc->textDocument();
 
-            //if (!m_highligher)
-                //m_highligher = new Highlighter(m_doc);
-            //else
-                //m_highligher->setDocument(m_doc);
+            if (!m_highligher)
+                m_highligher = new SyntaxHighlighter(m_doc);
+            else
+                m_highligher->setDocument(m_doc);
         }
     }
     emit targetChanged();
 }
 
-void DocumentHandler::setFileUrl(const QUrl &arg)
+void DocumentHandler::setFileUrl(const QUrl& arg)
 {
     if (m_fileUrl != arg) {
         m_fileUrl = arg;
@@ -47,7 +50,7 @@ void DocumentHandler::setFileUrl(const QUrl &arg)
             QFile file(fileName);
             if (file.open(QFile::ReadOnly)) {
                 QByteArray data = file.readAll();
-                QTextCodec *codec = QTextCodec::codecForHtml(data);
+                QTextCodec* codec = QTextCodec::codecForHtml(data);
                 setText(codec->toUnicode(data));
                 if (m_doc)
                     m_doc->setModified(false);
@@ -79,7 +82,7 @@ void DocumentHandler::setDocumentTitle(QString arg)
     }
 }
 
-void DocumentHandler::setText(const QString &arg)
+void DocumentHandler::setText(const QString& arg)
 {
     if (m_text != arg) {
         m_text = arg;
@@ -87,7 +90,7 @@ void DocumentHandler::setText(const QString &arg)
     }
 }
 
-void DocumentHandler::saveAs(const QUrl &arg, const QString &fileType)
+void DocumentHandler::saveAs(const QUrl& arg, const QString& fileType)
 {
     bool isHtml = fileType.contains(QLatin1String("htm"));
     QLatin1String ext(isHtml ? ".html" : ".txt");

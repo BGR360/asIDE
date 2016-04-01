@@ -3,9 +3,6 @@
 
 #include <QQuickTextDocument>
 
-#include <QtGui/QTextCharFormat>
-#include <QtCore/QTextCodec>
-
 #include <qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
@@ -17,7 +14,7 @@ class DocumentHandler : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QQuickItem* target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
     Q_PROPERTY(int selectionStart READ selectionStart WRITE setSelectionStart NOTIFY selectionStartChanged)
     Q_PROPERTY(int selectionEnd READ selectionEnd WRITE setSelectionEnd NOTIFY selectionEndChanged)
@@ -29,9 +26,9 @@ class DocumentHandler : public QObject
 public:
     DocumentHandler();
 
-    QQuickItem *target() { return m_target; }
+    QQuickItem* target() { return m_target; }
 
-    void setTarget(QQuickItem *target);
+    void setTarget(QQuickItem* target);
 
     void setCursorPosition(int position);
     void setSelectionStart(int position);
@@ -47,9 +44,9 @@ public:
     QString documentTitle() const;
 
 public slots:
-    void setFileUrl(const QUrl &arg);
-    void setText(const QString &arg);
-    void saveAs(const QUrl &arg, const QString &fileType);
+    void setFileUrl(const QUrl& arg);
+    void setText(const QString& arg);
+    void saveAs(const QUrl& arg, const QString& fileType);
 
     void setDocumentTitle(QString arg);
 
@@ -69,9 +66,9 @@ private:
     void reset();
     QTextCursor textCursor() const;
 
-    QQuickItem *m_target;
-    QTextDocument *m_doc;
-    QSyntaxHighlighter *m_highligher;
+    QQuickItem* m_target;
+    QTextDocument* m_doc;
+    QSyntaxHighlighter* m_highligher;
 
     int m_cursorPosition;
     int m_selectionStart;
