@@ -11,7 +11,7 @@ The E100 has a simple Instruction Set Architecture. Using it, the students write
 
 asIDE is (planned to be) a cross-platform application for developing E100 assembly language programs. The IDE (Integrated Development Environment) is integrated with **ase100**, the assembler developed by Professor Peter Chen at U of M. This allows for a rapid, fluid workflow for E100 Assembly programmers.
 
-![A nastyass screenshot](http://i.imgur.com/fhXIV97.png)
+![A nastyass screenshot](http://i.imgur.com/F5OBOEE.png)
 
 ### (Planned) Features
 
