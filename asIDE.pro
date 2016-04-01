@@ -4,7 +4,8 @@ QT += qml quick widgets
 
 CONFIG += c++11
 
-SOURCES += src/main.cpp
+SOURCES += src/main.cpp \
+    src/documenthandler.cpp
 
 RESOURCES += qml.qrc
 
@@ -13,3 +14,6 @@ QML_IMPORT_PATH = qml
 
 # Default rules for deployment.
 include(deployment.pri)
+
+HEADERS += \
+    src/documenthandler.h
