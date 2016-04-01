@@ -26,12 +26,6 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
         highlightingRules.append(rule);
     }
 
-    // Create a highlighting rule for single-line comments
-    singleLineCommentFormat.setForeground(Qt::darkGreen);
-    rule.pattern = QRegExp("//[^\n]*");
-    rule.format = singleLineCommentFormat;
-    highlightingRules.append(rule);
-
     // Create a highlighting rule for single-quoted characters
     quotationFormat.setForeground(Qt::red);
     rule.pattern = QRegExp("'.'");
@@ -40,8 +34,14 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
 
     // Create a highlighting rule for numbers (decimal and hexidecimal)
     numberFormat.setForeground(Qt::blue);
-    rule.pattern = QRegExp("\\b\\s0x[0-9a-fA-F]+|[0-9]+\\s\\b");
+    rule.pattern = QRegExp("\\b0x[0-9a-fA-F]+\\b|\\b[0-9]+\\b");
     rule.format = numberFormat;
+    highlightingRules.append(rule);
+
+    // Create a highlighting rule for single-line comments
+    singleLineCommentFormat.setForeground(Qt::darkGreen);
+    rule.pattern = QRegExp("//[^\n]*");
+    rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
 }
 
