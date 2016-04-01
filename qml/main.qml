@@ -25,7 +25,7 @@ ApplicationWindow {
         id: cutAction
         text: "Cut"
         shortcut: StandardKey.Cut
-        iconSource: "images/editcut.png"
+        iconSource: "/images/editcut.png"
         iconName: "edit-cut"
         onTriggered: textArea.cut()
     }
@@ -34,7 +34,7 @@ ApplicationWindow {
         id: copyAction
         text: "Copy"
         shortcut: StandardKey.Copy
-        iconSource: "images/editcopy.png"
+        iconSource: "/images/editcopy.png"
         iconName: "edit-copy"
         onTriggered: textArea.copy()
     }
@@ -43,9 +43,27 @@ ApplicationWindow {
         id: pasteAction
         text: "Paste"
         shortcut: StandardKey.Paste
-        iconSource: "qrc:images/editpaste.png"
+        iconSource: "/images/editpaste.png"
         iconName: "edit-paste"
         onTriggered: textArea.paste()
+    }
+
+    // TODO
+    Action {
+        id: undoAction
+        text: "Undo"
+        shortcut: StandardKey.Undo
+        iconSource: "/images/editundo.png"
+        iconName: "edit-undo"
+    }
+
+    // TODO
+    Action {
+        id: redoAction
+        text: "Redo"
+        shortcut: StandardKey.Redo
+        iconSource: "/images/editredo.png"
+        iconName: "edit-redo"
     }
 
     FileDialog {
@@ -59,10 +77,19 @@ ApplicationWindow {
         }
     }
 
+    // TODO
+    Action {
+        id: fileNewAction
+        shortcut: StandardKey.New
+        iconSource: "/images/filenew.png"
+        iconName: "document-new"
+        text: "New"
+    }
+
     Action {
         id: fileOpenAction
         shortcut: StandardKey.Open
-        iconSource: "images/fileopen.png"
+        iconSource: "/images/fileopen.png"
         iconName: "document-open"
         text: "Open"
         onTriggered: {
@@ -74,7 +101,7 @@ ApplicationWindow {
     Action {
         id: fileSaveAsAction
         shortcut: StandardKey.SaveAs
-        iconSource: "images/filesave.png"
+        iconSource: "/images/filesave.png"
         iconName: "document-save"
         text: "Save As…"
         onTriggered: {
@@ -118,15 +145,21 @@ ApplicationWindow {
         RowLayout {
             anchors.fill: parent
             spacing: 0
-            ToolButton { action: fileOpenAction }
 
-            //ToolBarSeparator {}
+            ToolButton { action: fileNewAction }
+            ToolButton { action: fileOpenAction }
+            ToolButton { action: fileSaveAsAction }
+
+            ToolBarSeparator {}
+
+            ToolButton { action: undoAction }
+            ToolButton { action: redoAction }
+
+            ToolBarSeparator {}
 
             ToolButton { action: copyAction }
             ToolButton { action: cutAction }
             ToolButton { action: pasteAction }
-
-            //ToolBarSeparator {}
 
             Item { Layout.fillWidth: true }
         }
