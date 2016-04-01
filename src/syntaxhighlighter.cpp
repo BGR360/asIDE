@@ -26,10 +26,22 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
         highlightingRules.append(rule);
     }
 
+    // Create a highlighting rule for E100 labels
+    labelFormat.setForeground(Qt::magenta);
+    rule.pattern = QRegExp("\\b^[A-Za-z]\\w*\\b");
+    rule.format = labelFormat;
+    highlightingRules.append(rule);
+
     // Create a highlighting rule for single-quoted characters
-    quotationFormat.setForeground(Qt::red);
+    quotationFormat.setForeground(Qt::darkYellow);
     rule.pattern = QRegExp("'.'");
     rule.format = quotationFormat;
+    highlightingRules.append(rule);
+
+    // Create a highlighting rule for #include statements
+    includeFormat.setForeground(Qt::darkCyan);
+    rule.pattern = QRegExp("^#include");
+    rule.format = includeFormat;
     highlightingRules.append(rule);
 
     // Create a highlighting rule for numbers (decimal and hexidecimal)
