@@ -29,6 +29,7 @@ private:
     QTextCharFormat keywordFormat;
     QTextCharFormat labelFormat;
     QTextCharFormat includeFormat;
+    QTextCharFormat includeFileFormat;
     QTextCharFormat singleLineCommentFormat;
     QTextCharFormat quotationFormat;
     QTextCharFormat numberFormat;

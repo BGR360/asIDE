@@ -39,15 +39,20 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
     highlightingRules.append(rule);
 
     // Create a highlighting rule for #include statements
-    includeFormat.setForeground(Qt::darkCyan);
+    includeFormat.setForeground(Qt::darkBlue);
     rule.pattern = QRegExp("^#include");
     rule.format = includeFormat;
     highlightingRules.append(rule);
+
 
     // Create a highlighting rule for numbers (decimal and hexidecimal)
     numberFormat.setForeground(Qt::blue);
     rule.pattern = QRegExp("\\b0x[0-9a-fA-F]+\\b|\\b[0-9]+\\b");
     rule.format = numberFormat;
+    highlightingRules.append(rule);
+    includeFileFormat.setForeground(Qt::darkYellow);
+    rule.pattern = QRegExp("[\\./\\w]+\\.e");
+    rule.format = includeFileFormat;
     highlightingRules.append(rule);
 
     // Create a highlighting rule for single-line comments
