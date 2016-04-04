@@ -42,6 +42,7 @@ private:
 
     QString currentFile;
     QString pathToAse100;
+    QString pathToMostRecentFile;
 
     void connectSignalsAndSlots();
     void setupActions();

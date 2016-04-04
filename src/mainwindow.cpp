@@ -76,10 +76,13 @@ void MainWindow::open()
     {
         QString fileName = QFileDialog::getOpenFileName(this,
                                                         tr("Select an assembly file"),
-                                                        QDir::homePath(),
+                                                        pathToMostRecentFile,
                                                         tr("E100 Assembly Files (*.e)"));
         if (!fileName.isEmpty())
+        {
+            pathToMostRecentFile = fileName;
             loadFile(fileName);
+        }
     }
 }
 
@@ -100,6 +103,7 @@ bool MainWindow::saveAs()
     QFileDialog dialog(this);
     dialog.setWindowModality(Qt::WindowModal);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDirectory(pathToMostRecentFile);
     if (dialog.exec() != QDialog::Accepted)
         return false;
     return saveFile(dialog.selectedFiles().first());
@@ -191,7 +195,7 @@ void MainWindow::setupFont()
     QFontMetrics metrics(font);
     editor->setTabStopWidth(tabStop * metrics.width(' '));
 
-    editor->setCursorWidth(3);
+    editor->setCursorWidth(2);
 }
 
 void MainWindow::setupSyntaxHighlighter()
@@ -224,6 +228,7 @@ void MainWindow::readSettings()
 #endif
 
     pathToAse100 = settings.value("pathToAse100", defaultPathToAse100).toString();
+    pathToMostRecentFile = settings.value("pathToMostRecentFile", QDir::homePath()).toString();
 }
 
 void MainWindow::writeSettings()
@@ -231,6 +236,7 @@ void MainWindow::writeSettings()
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("geometry", saveGeometry());
     settings.setValue("pathToAse100", pathToAse100);
+    settings.setValue("pathToMostRecentFile", pathToMostRecentFile);
 }
 
 bool MainWindow::maybeSave()
@@ -293,7 +299,7 @@ void MainWindow::setCurrentFile(const QString& fileName)
 
     QString shownName = currentFile;
     if (currentFile.isEmpty())
-        shownName = "untitled.txt";
+        shownName = "untitled.e";
     setWindowFilePath(shownName);
 
     QString stripped = strippedName(shownName);
