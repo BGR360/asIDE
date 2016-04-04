@@ -5,8 +5,6 @@
 #include <QDesktopWidget>
 #include <QFile>
 #include <QFileDialog>
-#include <QFont>
-#include <QFontMetrics>
 #include <QIcon>
 #include <QMessageBox>
 #include <QPlainTextEdit>
@@ -15,22 +13,17 @@
 #include <QTextStream>
 
 #include "aseconfigdialog.h"
-#include "syntaxhighlighter.h"
+#include "codeeditwidget.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    editor(0),
-    highlighter(0)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    editor = ui->editor;
-
     connectSignalsAndSlots();
     setupActions();
-    setupFont();
-    setupSyntaxHighlighter();
+    setupEditor();
 
     readSettings();
 }
@@ -38,18 +31,14 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete highlighter;
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (maybeSave())
-    {
+    if (maybeSave()) {
         writeSettings();
         event->accept();
-    }
-    else
-    {
+    } else {
         event->ignore();
     }
 }
@@ -63,23 +52,20 @@ void MainWindow::showEvent(QShowEvent* event)
 
 void MainWindow::newFile()
 {
-    if (maybeSave())
-    {
-        editor->clear();
+    if (maybeSave()) {
+        //editor->clear();
         setCurrentFile(QString());
     }
 }
 
 void MainWindow::open()
 {
-    if (maybeSave())
-    {
+    if (maybeSave()) {
         QString fileName = QFileDialog::getOpenFileName(this,
                                                         tr("Select an assembly file"),
                                                         pathToMostRecentFile,
                                                         tr("E100 Assembly Files (*.e)"));
-        if (!fileName.isEmpty())
-        {
+        if (!fileName.isEmpty()) {
             pathToMostRecentFile = fileName;
             loadFile(fileName);
         }
@@ -88,12 +74,9 @@ void MainWindow::open()
 
 bool MainWindow::save()
 {
-    if (currentFile.isEmpty())
-    {
+    if (currentFile.isEmpty()) {
         return saveAs();
-    }
-    else
-    {
+    } else {
         return saveFile(currentFile);
     }
 }
@@ -179,29 +162,11 @@ void MainWindow::setupActions()
 #endif
 }
 
-void MainWindow::setupFont()
+void MainWindow::setupEditor()
 {
-    // Set the font to a monospace font
-    QFont font;
-    font.setFamily("Courier");
-    font.setStyleHint(QFont::Monospace);
-    font.setFixedPitch(true);
-    font.setPointSize(14);
-
-    ui->editor->setFont(font);
-
-    // Set the tab width to 8 spaces
-    const int tabStop = 8;
-    QFontMetrics metrics(font);
-    editor->setTabStopWidth(tabStop * metrics.width(' '));
-
-    editor->setCursorWidth(2);
-}
-
-void MainWindow::setupSyntaxHighlighter()
-{
-    QTextDocument* doc = editor->document();
-    highlighter = new SyntaxHighlighter(doc);
+    QTabWidget* tabWidget = ui->tabWidget;
+    editor = new CodeEditWidget();
+    tabWidget->addTab(editor, "untitled.e");
 }
 
 void MainWindow::readSettings()
@@ -241,8 +206,8 @@ void MainWindow::writeSettings()
 
 bool MainWindow::maybeSave()
 {
-    if (!editor->document()->isModified())
-        return true;
+    //if (!editor->document()->isModified())
+        //return true;
 
     const QMessageBox::StandardButton ret
         = QMessageBox::warning(this, tr("asIDE"),
@@ -280,7 +245,7 @@ bool MainWindow::saveFile(const QString& fileName)
     QApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
 
-    out << editor->toPlainText();
+    //out << editor->toPlainText();
 
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
@@ -294,7 +259,7 @@ bool MainWindow::saveFile(const QString& fileName)
 void MainWindow::setCurrentFile(const QString& fileName)
 {
     currentFile = fileName;
-    editor->document()->setModified(false);
+    //editor->document()->setModified(false);
     setWindowModified(false);
 
     QString shownName = currentFile;
@@ -314,8 +279,7 @@ QString MainWindow::strippedName(const QString& fullFileName)
 void MainWindow::loadFile(const QString& fileName)
 {
     QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text))
-    {
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
         QMessageBox::warning(this, tr("asIDE"),
                              tr("Cannot read file %1:\n%2.")
                              .arg(QDir::toNativeSeparators(fileName), file.errorString()));
@@ -328,7 +292,7 @@ void MainWindow::loadFile(const QString& fileName)
     QApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
 
-    editor->setPlainText(in.readAll());
+    //editor->setPlainText(in.readAll());
 
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();

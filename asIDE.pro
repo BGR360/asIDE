@@ -16,17 +16,18 @@ CONFIG += c++11
 
 SOURCES += src/main.cpp \
     src/mainwindow.cpp \
-    #src/documenthandler.cpp \
     src/syntaxhighlighter.cpp \
-    src/aseconfigdialog.cpp
+    src/aseconfigdialog.cpp \
+    src/codeeditwidget.cpp
 
 HEADERS  += src/mainwindow.h \
-    #src/documenthandler.h
     src/syntaxhighlighter.h \
-    src/aseconfigdialog.h
+    src/aseconfigdialog.h \
+    src/codeeditwidget.h
 
 FORMS    += forms/mainwindow.ui \
-    forms/aseconfigdialog.ui
+    forms/aseconfigdialog.ui \
+    forms/codeeditwidget.ui
 
 RESOURCES += resources.qrc
 

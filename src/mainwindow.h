@@ -3,10 +3,7 @@
 
 #include <QMainWindow>
 
-QT_BEGIN_NAMESPACE
-class QPlainTextEdit;
-class QSyntaxHighlighter;
-QT_END_NAMESPACE
+class CodeEditWidget;
 
 namespace Ui {
 class MainWindow;
@@ -37,8 +34,7 @@ private slots:
 private:
     Ui::MainWindow* ui;
 
-    QPlainTextEdit* editor;
-    QSyntaxHighlighter* highlighter;
+    CodeEditWidget* editor;
 
     QString currentFile;
     QString pathToAse100;
@@ -46,8 +42,7 @@ private:
 
     void connectSignalsAndSlots();
     void setupActions();
-    void setupFont();
-    void setupSyntaxHighlighter();
+    void setupEditor();
 
     void readSettings();
     void writeSettings();
