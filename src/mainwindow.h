@@ -32,6 +32,7 @@ private slots:
     bool save();
     bool saveAs();
     bool assemble();
+    void configureAse();
 
 private:
     Ui::MainWindow* ui;

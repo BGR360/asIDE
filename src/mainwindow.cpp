@@ -14,6 +14,7 @@
 #include <QSettings>
 #include <QTextStream>
 
+#include "aseconfigdialog.h"
 #include "syntaxhighlighter.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -73,7 +74,10 @@ void MainWindow::open()
 {
     if (maybeSave())
     {
-        QString fileName = QFileDialog::getOpenFileName(this);
+        QString fileName = QFileDialog::getOpenFileName(this,
+                                                        tr("Select an assembly file"),
+                                                        QDir::homePath(),
+                                                        tr("E100 Assembly Files (*.e)"));
         if (!fileName.isEmpty())
             loadFile(fileName);
     }
@@ -128,6 +132,15 @@ bool MainWindow::assemble()
 #endif
 }
 
+void MainWindow::configureAse()
+{
+    AseConfigDialog* dialog = new AseConfigDialog(this, pathToAse100);
+    dialog->setWindowTitle("Configure ase100");
+    if (dialog->exec() == QDialog::Accepted) {
+        pathToAse100 = dialog->getPath();
+    }
+}
+
 void MainWindow::connectSignalsAndSlots()
 {
     // Pair each action with a corresponding behavior in the MainWindow
@@ -136,6 +149,7 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionSave, SIGNAL(triggered(bool)), this, SLOT(save()));
     connect(ui->actionSaveAs, SIGNAL(triggered(bool)), this, SLOT(saveAs()));
     connect(ui->actionAssemble, SIGNAL(triggered(bool)), this, SLOT(assemble()));
+    connect(ui->actionConfigureAse, SIGNAL(triggered(bool)), this, SLOT(configureAse()));
 }
 
 void MainWindow::setupActions()
