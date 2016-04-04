@@ -31,6 +31,7 @@ private slots:
     void open();
     bool save();
     bool saveAs();
+    bool assemble();
 
 private:
     Ui::MainWindow* ui;
@@ -39,6 +40,7 @@ private:
     QSyntaxHighlighter* highlighter;
 
     QString currentFile;
+    QString pathToAse100;
 
     void connectSignalsAndSlots();
     void setupActions();

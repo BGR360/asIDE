@@ -9,5 +9,6 @@
         <file>images/fileopen.png</file>
         <file>images/filesave.png</file>
         <file>images/qt-logo.png</file>
+        <file>images/assemble.png</file>
     </qresource>
 </RCC>
