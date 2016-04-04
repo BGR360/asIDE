@@ -1,24 +1,35 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QDesktopWidget>
+#include <QFile>
+#include <QFileDialog>
 #include <QFont>
 #include <QFontMetrics>
 #include <QIcon>
-#include <QTextEdit>
+#include <QMessageBox>
+#include <QPlainTextEdit>
+#include <QSettings>
+#include <QTextStream>
 
 #include "syntaxhighlighter.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    editor(0),
     highlighter(0)
 {
     ui->setupUi(this);
+
+    editor = ui->editor;
 
     connectSignalsAndSlots();
     setupActions();
     setupFont();
     setupSyntaxHighlighter();
+
+    readSettings();
 }
 
 MainWindow::~MainWindow()
@@ -27,9 +38,74 @@ MainWindow::~MainWindow()
     delete highlighter;
 }
 
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (maybeSave())
+    {
+        writeSettings();
+        event->accept();
+    }
+    else
+    {
+        event->ignore();
+    }
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+    Q_UNUSED(event);
+    if (currentFile.isEmpty())
+        newFile();
+}
+
+void MainWindow::newFile()
+{
+    if (maybeSave())
+    {
+        editor->clear();
+        setCurrentFile(QString());
+    }
+}
+
+void MainWindow::open()
+{
+    if (maybeSave())
+    {
+        QString fileName = QFileDialog::getOpenFileName(this);
+        if (!fileName.isEmpty())
+            loadFile(fileName);
+    }
+}
+
+bool MainWindow::save()
+{
+    if (currentFile.isEmpty())
+    {
+        return saveAs();
+    }
+    else
+    {
+        return saveFile(currentFile);
+    }
+}
+
+bool MainWindow::saveAs()
+{
+    QFileDialog dialog(this);
+    dialog.setWindowModality(Qt::WindowModal);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    if (dialog.exec() != QDialog::Accepted)
+        return false;
+    return saveFile(dialog.selectedFiles().first());
+}
+
 void MainWindow::connectSignalsAndSlots()
 {
     // Pair each action with a corresponding behavior in the MainWindow
+    connect(ui->actionNew, SIGNAL(triggered(bool)), this, SLOT(newFile()));
+    connect(ui->actionOpen, SIGNAL(triggered(bool)), this, SLOT(open()));
+    connect(ui->actionSave, SIGNAL(triggered(bool)), this, SLOT(save()));
+    connect(ui->actionSaveAs, SIGNAL(triggered(bool)), this, SLOT(saveAs()));
 }
 
 void MainWindow::setupActions()
@@ -61,11 +137,130 @@ void MainWindow::setupFont()
     // Set the tab width to 8 spaces
     const int tabStop = 8;
     QFontMetrics metrics(font);
-    ui->editor->setTabStopWidth(tabStop * metrics.width(' '));
+    editor->setTabStopWidth(tabStop * metrics.width(' '));
 }
 
 void MainWindow::setupSyntaxHighlighter()
 {
-    QTextDocument* doc = ui->editor->document();
+    QTextDocument* doc = editor->document();
     highlighter = new SyntaxHighlighter(doc);
+}
+
+void MainWindow::readSettings()
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
+    if (geometry.isEmpty()) {
+        const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
+        resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
+        move((availableGeometry.width() - width()) / 2,
+             (availableGeometry.height() - height()) / 2);
+    } else {
+        restoreGeometry(geometry);
+    }
+}
+
+void MainWindow::writeSettings()
+{
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    settings.setValue("geometry", saveGeometry());
+}
+
+bool MainWindow::maybeSave()
+{
+    if (!editor->document()->isModified())
+        return true;
+
+    const QMessageBox::StandardButton ret
+        = QMessageBox::warning(this, tr("Application"),
+                               tr("The document has been modified.\n"
+                                  "Do you want to save your changes?"),
+                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    switch (ret)
+    {
+    case QMessageBox::Save:
+        return save();
+    case QMessageBox::Cancel:
+        return false;
+    default:
+        break;
+    }
+
+    return true;
+}
+
+bool MainWindow::saveFile(const QString& fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::WriteOnly | QFile::Text))
+    {
+        QMessageBox::warning(this, tr("Application"),
+                             tr("Cannot write file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName),
+                                  file.errorString()));
+        return false;
+    }
+
+    QTextStream out(&file);
+
+#ifndef QT_NO_CURSOR
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+
+    out << editor->toPlainText();
+
+#ifndef QT_NO_CURSOR
+    QApplication::restoreOverrideCursor();
+#endif
+
+    setCurrentFile(fileName);
+    statusBar()->showMessage(tr("File saved"), 2000);
+    return true;
+}
+
+void MainWindow::setCurrentFile(const QString& fileName)
+{
+    currentFile = fileName;
+    editor->document()->setModified(false);
+    setWindowModified(false);
+
+    QString shownName = currentFile;
+    if (currentFile.isEmpty())
+        shownName = "untitled.txt";
+    setWindowFilePath(shownName);
+
+    QString stripped = strippedName(shownName);
+    setWindowTitle(stripped.append(" - asIDE"));
+}
+
+QString MainWindow::strippedName(const QString& fullFileName)
+{
+    return QFileInfo(fullFileName).fileName();
+}
+
+void MainWindow::loadFile(const QString& fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        QMessageBox::warning(this, tr("Application"),
+                             tr("Cannot read file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+
+    QTextStream in(&file);
+
+#ifndef QT_NO_CURSOR
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+
+    editor->setPlainText(in.readAll());
+
+#ifndef QT_NO_CURSOR
+    QApplication::restoreOverrideCursor();
+#endif
+
+    setCurrentFile(fileName);
+    statusBar()->showMessage(tr("File loaded"), 2000);
 }

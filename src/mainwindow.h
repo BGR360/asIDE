@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
+class QPlainTextEdit;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
@@ -19,15 +20,37 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void loadFile(const QString& fileName);
+
+protected:
+    void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
+    void showEvent(QShowEvent* event) Q_DECL_OVERRIDE;
+
+private slots:
+    void newFile();
+    void open();
+    bool save();
+    bool saveAs();
+
 private:
     Ui::MainWindow* ui;
 
+    QPlainTextEdit* editor;
     QSyntaxHighlighter* highlighter;
+
+    QString currentFile;
 
     void connectSignalsAndSlots();
     void setupActions();
     void setupFont();
     void setupSyntaxHighlighter();
+
+    void readSettings();
+    void writeSettings();
+    bool maybeSave();
+    bool saveFile(const QString &fileName);
+    void setCurrentFile(const QString &fileName);
+    QString strippedName(const QString &fullFileName);
 };
 
 #endif // MAINWINDOW_H
