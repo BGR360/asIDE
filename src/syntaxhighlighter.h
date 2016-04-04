@@ -29,7 +29,6 @@ private:
 
     QTextCharFormat labelFormat;
     QRegExp labelExpression;
-    QMap<QString, qint32> labels;
 
     QTextCharFormat keywordFormat;
     QTextCharFormat includeFormat;

@@ -190,6 +190,8 @@ void MainWindow::setupFont()
     const int tabStop = 8;
     QFontMetrics metrics(font);
     editor->setTabStopWidth(tabStop * metrics.width(' '));
+
+    editor->setCursorWidth(3);
 }
 
 void MainWindow::setupSyntaxHighlighter()

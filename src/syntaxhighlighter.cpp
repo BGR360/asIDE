@@ -49,17 +49,19 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
     rule.format = includeFileFormat;
     highlightingRules.append(rule);
 
+    // Create a highlighting rule for E100 labels
+    labelFormat.setForeground(Qt::darkRed);
+    labelFormat.setFontItalic(true);
+    labelFormat.setFontWeight(QFont::DemiBold);
+    labelExpression = QRegExp("^[A-Za-z]\\w*\\s");
+    rule.pattern = labelExpression;
+    rule.format = labelFormat;
+    highlightingRules.append(rule);
+
     // Create a highlighting rule for single-line comments
     singleLineCommentFormat.setForeground(Qt::darkGreen);
     rule.pattern = QRegExp("//[^\n]*");
     rule.format = singleLineCommentFormat;
-    highlightingRules.append(rule);
-
-    // Create a highlighting rule for E100 labels
-    labelFormat.setForeground(Qt::magenta);
-    labelExpression = QRegExp("\\b^[A-Za-z]\\w*\\s");
-    rule.pattern = labelExpression;
-    rule.format = labelFormat;
     highlightingRules.append(rule);
 }
 
@@ -74,28 +76,7 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
                 break;
             setFormat(index, length, rule.format);
 
-            // If this is the label expression, keep track of it as a label
-            if (expression == labelExpression) {
-                QString label = text.mid(index, length);
-                if (!labels.contains(label)) {
-                    int lineNumber = currentBlock().blockNumber();
-                    labels[label] = lineNumber;
-                }
-            }
-
             index = expression.indexIn(text, index + length);
-        }
-    }
-
-    // Highlight all labels
-    QMap<QString, int>::const_iterator i = labels.constBegin();
-    for (; i != labels.constEnd(); ++i) {
-        QString label = i.key();
-        int length = label.length();
-        int index = text.indexOf(label);
-        while (index >= 0) {
-            setFormat(index, length, labelFormat);
-            index = text.indexOf(label, index + length);
         }
     }
 }
