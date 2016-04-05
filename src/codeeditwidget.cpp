@@ -24,9 +24,23 @@ CodeEditWidget::~CodeEditWidget()
     delete ui;
 }
 
+QString CodeEditWidget::fileExtension() const
+{
+    return QFileInfo(fullFileName()).completeSuffix();
+}
+
 QString CodeEditWidget::fileName() const
 {
     return QFileInfo(fullFileName()).fileName();
+}
+
+QString CodeEditWidget::fileNameWithoutExtension() const
+{
+    QString fullPath = fullFileName();
+    QString extension = fileExtension();
+    const int extensionLength = extension.length();
+    const int cutoffLength = fullPath.length() - extensionLength - 1;
+    return fullPath.mid(0, cutoffLength);
 }
 
 QString CodeEditWidget::fullFileName() const

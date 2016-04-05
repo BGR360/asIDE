@@ -35,6 +35,8 @@ private slots:
     void setEditor(CodeEditWidget* codeEdit);
     bool assemble();
     void configureAse();
+    bool viewLabels();
+    bool viewMif();
     void onModifyCurrentFile();
 
 private:

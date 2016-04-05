@@ -20,7 +20,9 @@ public:
     explicit CodeEditWidget(QWidget *parent = 0);
     ~CodeEditWidget();
 
+    QString fileExtension() const;
     QString fileName() const;
+    QString fileNameWithoutExtension() const;
     QString fullFileName() const;
     QPlainTextEdit* textEdit();
 

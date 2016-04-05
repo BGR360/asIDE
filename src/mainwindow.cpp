@@ -67,7 +67,9 @@ void MainWindow::open()
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Select an assembly file"),
                                                     pathToMostRecentFile,
-                                                    tr("E100 Assembly Files (*.e)"));
+                                                    tr("E100 Assembly Files (*.e);;"
+                                                       "E100 Labels Files (*.labels);;"
+                                                       "MIF Files (*.mif)"));
     if (!fileName.isEmpty()) {
         pathToMostRecentFile = fileName;
         loadFile(fileName);
@@ -129,6 +131,16 @@ void MainWindow::onTabSwitched(int index)
     QWidget* tab = ui->tabWidget->widget(index);
     CodeEditWidget* codeEdit = qobject_cast<CodeEditWidget*>(tab);
     setEditor(codeEdit);
+
+    // Check to see if the "View Labels" and "View MIF" options are available for this file
+    QString fileExtension = editor->fileExtension();
+    if (fileExtension == "e") {
+        ui->actionViewLabels->setEnabled(true);
+        ui->actionViewMif->setEnabled(true);
+    } else {
+        ui->actionViewLabels->setEnabled(false);
+        ui->actionViewMif->setEnabled(false);
+    }
 }
 
 void MainWindow::setEditor(CodeEditWidget* codeEdit)
@@ -138,6 +150,8 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
         // Disconnect signals and slots from the previous editor
         if (editor) {
             QPlainTextEdit* textEdit = editor->textEdit();
+            disconnect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
+            disconnect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
             disconnect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
             disconnect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
             disconnect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
@@ -149,6 +163,8 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
 
         // Hook up the necessary signals and slots for the code editor
         QPlainTextEdit* textEdit = editor->textEdit();
+        connect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
+        connect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
         connect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
         connect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
         connect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
@@ -160,6 +176,17 @@ bool MainWindow::assemble()
 {
     // Assembly using ase100 is only supported on Windows and Linux
 #if defined(Q_OS_LINUX) || defined(Q_OS_WIN)
+    statusBar()->showMessage(tr("Assembling file..."));
+
+    if (currentFile.contains("untitled")) {
+        QMessageBox::warning(this, tr("ase100"),
+                             tr("Unable to assemble untitled file.\n"
+                                "Please save the file before assembling."),
+                             QMessageBox::Ok);
+        statusBar()->showMessage(tr("File assembly via ase100 failed."), 3000);
+        return false;
+    }
+
     QProcess process;
     if (!pathToAse100.isEmpty()) {
         process.setProcessChannelMode(QProcess::MergedChannels);
@@ -201,10 +228,42 @@ bool MainWindow::assemble()
 void MainWindow::configureAse()
 {
     AseConfigDialog* dialog = new AseConfigDialog(this, pathToAse100);
-    dialog->setWindowTitle("Configure ase100");
+    dialog->setWindowTitle(tr("Configure ase100"));
     if (dialog->exec() == QDialog::Accepted) {
         pathToAse100 = dialog->getPath();
     }
+}
+
+bool MainWindow::viewLabels()
+{
+    statusBar()->showMessage(tr("Attempting to open Labels file..."));
+    QString labelsPath = editor->fileNameWithoutExtension().append(".labels");
+    bool exists = QFileInfo(labelsPath).exists();
+    if (!exists) {
+        if (!assemble() || !QFileInfo(labelsPath).exists()) {
+            statusBar()->showMessage(tr("Failed to open Labels file"), 3000);
+            return false;
+        }
+    }
+
+    loadFile(labelsPath);
+    return true;
+}
+
+bool MainWindow::viewMif()
+{
+    statusBar()->showMessage(tr("Attempting to open MIF file..."));
+    QString mifPath = editor->fileNameWithoutExtension().append(".mif");
+    bool exists = QFileInfo(mifPath).exists();
+    if (!exists) {
+        if (!assemble() || !QFileInfo(mifPath).exists()) {
+            statusBar()->showMessage(tr("Failed to open MIF file"), 3000);
+            return false;
+        }
+    }
+
+    loadFile(mifPath);
+    return true;
 }
 
 void MainWindow::onModifyCurrentFile()
@@ -223,6 +282,8 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionQuit, SIGNAL(triggered(bool)), QApplication::instance(), SLOT(quit()));
     connect(ui->actionAssemble, SIGNAL(triggered(bool)), this, SLOT(assemble()));
     connect(ui->actionConfigureAse, SIGNAL(triggered(bool)), this, SLOT(configureAse()));
+    connect(ui->actionViewLabels, SIGNAL(triggered(bool)), this, SLOT(viewLabels()));
+    connect(ui->actionViewMif, SIGNAL(triggered(bool)), this, SLOT(viewMif()));
 
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabSwitched(int)));
@@ -247,8 +308,12 @@ void MainWindow::setupActions()
     // User should only be able to "assemble" on Linux or Windows
 #if defined(Q_OS_LINUX) || defined(Q_OS_WIN)
     ui->actionAssemble->setEnabled(true);
+    ui->actionConfigureAse->setEnabled(true);
+    ui->actionLaunchAse->setEnabled(true);
 #else
     ui->actionAssemble->setEnabled(false);
+    ui->actionConfigureAse->setEnabled(false);
+    ui->actionLaunchAse->setEnabled(false);
 #endif
 }
 
@@ -319,7 +384,7 @@ void MainWindow::loadFile(const QString& fileName)
 
     if (codeEdit->load()) {
         if (!fileName.isEmpty())
-            statusBar()->showMessage(tr("File loaded"), 2000);
+            statusBar()->showMessage(tr("Loaded ") + fileName, 2000);
 
         setEditor(codeEdit);
 
@@ -327,6 +392,6 @@ void MainWindow::loadFile(const QString& fileName)
         switchToTab(index);
     } else {
         delete codeEdit;
-        statusBar()->showMessage(tr("File failed to load"), 3000);
+        statusBar()->showMessage(tr("Failed to load ") + fileName, 3000);
     }
 }
