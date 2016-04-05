@@ -176,6 +176,21 @@ bool MainWindow::assemble()
                                      QMessageBox::Ok);
             statusBar()->showMessage(tr("File successfully assembled."), 3000);
         }
+    } else {
+        const QMessageBox::StandardButton ret
+            = QMessageBox::warning(this, tr("asIDE"),
+                                   tr("The path to the ase100 "
+                                      "executable has not been set.\n"
+                                      "Do you want to set it now?"),
+                                   QMessageBox::Cancel | QMessageBox::Yes);
+        switch(ret)
+        {
+        case QMessageBox::Yes:
+            ui->actionConfigureAse->trigger();
+            break;
+        default:
+            break;
+        }
     }
     return true;
 #else
