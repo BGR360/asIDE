@@ -85,7 +85,7 @@ void CodeEditWidget::setupTextEdit()
     // Set the font to a monospace font
     QFont font;
     font.setFamily("Courier");
-    font.setStyleHint(QFont::Monospace);
+    font.setStyleHint(QFont::TypeWriter);
     font.setFixedPitch(true);
     font.setPointSize(FONT_SIZE);
 
@@ -141,8 +141,16 @@ bool CodeEditWidget::saveFile(const QString& fileName)
         return false;
     }
 
+#ifndef QT_NO_CURSOR
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+
     QTextStream out(&file);
     out << textEdit()->toPlainText();
+
+#ifndef QT_NO_CURSOR
+    QApplication::restoreOverrideCursor();
+#endif
 
     return true;
 }
@@ -160,8 +168,16 @@ bool CodeEditWidget::loadFile(const QString& fileName)
             return false;
         }
 
+#ifndef QT_NO_CURSOR
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+
         QTextStream in(&file);
         textEdit()->setPlainText(in.readAll());
+
+#ifndef QT_NO_CURSOR
+    QApplication::restoreOverrideCursor();
+#endif
     }
 
     fileBeingEdited = fileName;

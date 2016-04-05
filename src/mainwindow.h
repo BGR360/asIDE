@@ -35,6 +35,7 @@ private slots:
     void setEditor(CodeEditWidget* codeEdit);
     bool assemble();
     void configureAse();
+    void onModifyCurrentFile();
 
 private:
     Ui::MainWindow* ui;

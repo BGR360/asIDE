@@ -137,26 +137,22 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
 
         // Disconnect signals and slots from the previous editor
         if (editor) {
-            disconnect(ui->actionSave, SIGNAL(triggered(bool)), editor, SLOT(save()));
-            disconnect(ui->actionSaveAs, SIGNAL(triggered(bool)), editor, SLOT(saveAs()));
-
             QPlainTextEdit* textEdit = editor->textEdit();
             disconnect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
             disconnect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
             disconnect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
+            disconnect(textEdit, SIGNAL(textChanged()), this, SLOT(onModifyCurrentFile()));
         }
 
         editor = codeEdit;
         updateCurrentFile();
 
         // Hook up the necessary signals and slots for the code editor
-        connect(ui->actionSave, SIGNAL(triggered(bool)), editor, SLOT(save()));
-        connect(ui->actionSaveAs, SIGNAL(triggered(bool)), editor, SLOT(saveAs()));
-
         QPlainTextEdit* textEdit = editor->textEdit();
         connect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
         connect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
         connect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
+        connect(textEdit, SIGNAL(textChanged()), this, SLOT(onModifyCurrentFile()));
     }
 }
 
@@ -194,6 +190,11 @@ void MainWindow::configureAse()
     if (dialog->exec() == QDialog::Accepted) {
         pathToAse100 = dialog->getPath();
     }
+}
+
+void MainWindow::onModifyCurrentFile()
+{
+    updateCurrentFile();
 }
 
 void MainWindow::connectSignalsAndSlots()
@@ -279,8 +280,15 @@ void MainWindow::updateCurrentFile()
     QString shownName = currentFile;
     setWindowFilePath(shownName);
 
-    QString stripped = (editor) ? editor->fileName().append(" - ") : QString();
-    setWindowTitle(stripped.append("asIDE"));
+    QString stripped = (editor) ? editor->fileName() : QString();
+    if (!stripped.isEmpty()) {
+        if (editor->textEdit()->document()->isModified())
+            stripped += "*";
+        setWindowTitle(stripped.append(" - asIDE"));
+        ui->tabWidget->setTabText(ui->tabWidget->currentIndex(), stripped);
+    } else {
+        setWindowTitle("asIDE");
+    }
 }
 
 void MainWindow::loadFile(const QString& fileName)
