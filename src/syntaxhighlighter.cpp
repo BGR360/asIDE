@@ -41,7 +41,7 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
 
     // Create a highlighting rule for numbers (decimal and hexidecimal)
     numberFormat.setForeground(Qt::blue);
-    rule.pattern = QRegExp("\\b0x[0-9a-fA-F]+\\b|\\b[0-9]+\\b");
+    rule.pattern = QRegExp("\\b0x[0-9a-fA-F]+\\b|-[0-9]+\\b|\\b[0-9]+\\b");
     rule.format = numberFormat;
     highlightingRules.append(rule);
     includeFileFormat.setForeground(Qt::darkYellow);

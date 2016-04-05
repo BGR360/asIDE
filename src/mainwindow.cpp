@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connectSignalsAndSlots();
     setupActions();
-    setupEditor();
 
     readSettings();
 }
@@ -35,12 +34,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (maybeSave()) {
-        writeSettings();
-        event->accept();
-    } else {
-        event->ignore();
+    // Attempt to close all tabs before we accept the close event
+    while (ui->tabWidget->count() > 0)
+    {
+        if (!closeTab(0)) {
+            event->ignore();
+            return;
+        }
     }
+
+    writeSettings();
+    event->accept();
 }
 
 void MainWindow::showEvent(QShowEvent* event)
@@ -52,44 +56,71 @@ void MainWindow::showEvent(QShowEvent* event)
 
 void MainWindow::newFile()
 {
-    if (maybeSave()) {
-        //editor->clear();
-        setCurrentFile(QString());
-    }
+    loadFile(QString());
 }
 
 void MainWindow::open()
 {
-    if (maybeSave()) {
-        QString fileName = QFileDialog::getOpenFileName(this,
-                                                        tr("Select an assembly file"),
-                                                        pathToMostRecentFile,
-                                                        tr("E100 Assembly Files (*.e)"));
-        if (!fileName.isEmpty()) {
-            pathToMostRecentFile = fileName;
-            loadFile(fileName);
-        }
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Select an assembly file"),
+                                                    pathToMostRecentFile,
+                                                    tr("E100 Assembly Files (*.e)"));
+    if (!fileName.isEmpty()) {
+        pathToMostRecentFile = fileName;
+        loadFile(fileName);
     }
 }
 
 bool MainWindow::save()
 {
-    if (currentFile.isEmpty()) {
-        return saveAs();
-    } else {
-        return saveFile(currentFile);
+    if (editor->save()) {
+        statusBar()->showMessage(tr("File saved"), 2000);
+        return true;
     }
+    return false;
 }
 
 bool MainWindow::saveAs()
 {
-    QFileDialog dialog(this);
-    dialog.setWindowModality(Qt::WindowModal);
-    dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setDirectory(pathToMostRecentFile);
-    if (dialog.exec() != QDialog::Accepted)
-        return false;
-    return saveFile(dialog.selectedFiles().first());
+    if (editor->saveAs()) {
+        updateCurrentFile();
+        statusBar()->showMessage(tr("File saved"), 2000);
+        return true;
+    }
+    return false;
+}
+
+bool MainWindow::closeTab(int index)
+{
+    switchToTab(index);
+    QWidget* tab = ui->tabWidget->widget(index);
+    if (tab->close()) {
+        ui->tabWidget->removeTab(index);
+
+        // If all tabs have been closed, set editor to null and reset the window title
+        if (ui->tabWidget->count() == 0) {
+            editor = NULL;
+            updateCurrentFile();
+        }
+
+        return true;
+    }
+    return false;
+}
+
+void MainWindow::switchToTab(int index)
+{
+    ui->tabWidget->setCurrentIndex(index);
+}
+
+void MainWindow::onTabSwitched(int index)
+{
+    QWidget* tab = ui->tabWidget->widget(index);
+    CodeEditWidget* codeEdit = qobject_cast<CodeEditWidget*>(tab);
+    if (codeEdit) {
+        editor = codeEdit;
+        updateCurrentFile();
+    }
 }
 
 bool MainWindow::assemble()
@@ -137,6 +168,9 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionSaveAs, SIGNAL(triggered(bool)), this, SLOT(saveAs()));
     connect(ui->actionAssemble, SIGNAL(triggered(bool)), this, SLOT(assemble()));
     connect(ui->actionConfigureAse, SIGNAL(triggered(bool)), this, SLOT(configureAse()));
+
+    connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
+    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabSwitched(int)));
 }
 
 void MainWindow::setupActions()
@@ -160,13 +194,6 @@ void MainWindow::setupActions()
 #else
     ui->actionAssemble->setEnabled(false);
 #endif
-}
-
-void MainWindow::setupEditor()
-{
-    QTabWidget* tabWidget = ui->tabWidget;
-    editor = new CodeEditWidget();
-    tabWidget->addTab(editor, "untitled.e");
 }
 
 void MainWindow::readSettings()
@@ -204,100 +231,35 @@ void MainWindow::writeSettings()
     settings.setValue("pathToMostRecentFile", pathToMostRecentFile);
 }
 
-bool MainWindow::maybeSave()
+void MainWindow::updateCurrentFile()
 {
-    //if (!editor->document()->isModified())
-        //return true;
-
-    const QMessageBox::StandardButton ret
-        = QMessageBox::warning(this, tr("asIDE"),
-                               tr("The document has been modified.\n"
-                                  "Do you want to save your changes?"),
-                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-    switch (ret)
-    {
-    case QMessageBox::Save:
-        return save();
-    case QMessageBox::Cancel:
-        return false;
-    default:
-        break;
-    }
-
-    return true;
-}
-
-bool MainWindow::saveFile(const QString& fileName)
-{
-    QFile file(fileName);
-    if (!file.open(QFile::WriteOnly | QFile::Text))
-    {
-        QMessageBox::warning(this, tr("asIDE"),
-                             tr("Cannot write file %1:\n%2.")
-                             .arg(QDir::toNativeSeparators(fileName),
-                                  file.errorString()));
-        return false;
-    }
-
-    QTextStream out(&file);
-
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-#endif
-
-    //out << editor->toPlainText();
-
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
-
-    setCurrentFile(fileName);
-    statusBar()->showMessage(tr("File saved"), 2000);
-    return true;
-}
-
-void MainWindow::setCurrentFile(const QString& fileName)
-{
-    currentFile = fileName;
-    //editor->document()->setModified(false);
+    currentFile = (editor) ? editor->fullFileName() : QString();
     setWindowModified(false);
 
     QString shownName = currentFile;
-    if (currentFile.isEmpty())
-        shownName = "untitled.e";
     setWindowFilePath(shownName);
 
-    QString stripped = strippedName(shownName);
-    setWindowTitle(stripped.append(" - asIDE"));
-}
-
-QString MainWindow::strippedName(const QString& fullFileName)
-{
-    return QFileInfo(fullFileName).fileName();
+    QString stripped = (editor) ? editor->fileName().append(" - ") : QString();
+    setWindowTitle(stripped.append("asIDE"));
 }
 
 void MainWindow::loadFile(const QString& fileName)
 {
-    QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("asIDE"),
-                             tr("Cannot read file %1:\n%2.")
-                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
-        return;
+    CodeEditWidget* oldEditor = editor;
+    editor = new CodeEditWidget();
+    editor->setFileName(fileName);
+
+    if (editor->load()) {
+        const int index = ui->tabWidget->addTab(editor, editor->fileName());
+        switchToTab(index);
+
+        if (!fileName.isEmpty())
+            statusBar()->showMessage(tr("File loaded"), 2000);
+
+        updateCurrentFile();
+    } else {
+        delete editor;
+        editor = oldEditor;
+        statusBar()->showMessage(tr("File failed to load"), 3000);
     }
-
-    QTextStream in(&file);
-
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-#endif
-
-    //editor->setPlainText(in.readAll());
-
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
-
-    setCurrentFile(fileName);
-    statusBar()->showMessage(tr("File loaded"), 2000);
 }

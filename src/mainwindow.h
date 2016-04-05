@@ -28,6 +28,9 @@ private slots:
     void open();
     bool save();
     bool saveAs();
+    bool closeTab(int index);
+    void switchToTab(int index);
+    void onTabSwitched(int index);
     bool assemble();
     void configureAse();
 
@@ -42,14 +45,10 @@ private:
 
     void connectSignalsAndSlots();
     void setupActions();
-    void setupEditor();
 
     void readSettings();
     void writeSettings();
-    bool maybeSave();
-    bool saveFile(const QString &fileName);
-    void setCurrentFile(const QString &fileName);
-    QString strippedName(const QString &fullFileName);
+    void updateCurrentFile();
 };
 
 #endif // MAINWINDOW_H
