@@ -284,7 +284,7 @@ void MainWindow::updateCurrentFile()
     if (!stripped.isEmpty()) {
         if (editor->textEdit()->document()->isModified())
             stripped += "*";
-        setWindowTitle(stripped.append(" - asIDE"));
+        setWindowTitle(stripped + " - asIDE");
         ui->tabWidget->setTabText(ui->tabWidget->currentIndex(), stripped);
     } else {
         setWindowTitle("asIDE");
