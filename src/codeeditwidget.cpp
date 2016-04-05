@@ -84,8 +84,16 @@ void CodeEditWidget::setupTextEdit()
 {
     // Set the font to a monospace font
     QFont font;
+
+#if defined(Q_OS_LINUX)
+    font.setFamily("Andale Mono");
+#elif defined(Q_OS_MAC)
     font.setFamily("Courier");
-    font.setStyleHint(QFont::TypeWriter);
+#else
+    font.setFamily("Courier");
+#endif
+
+    font.setStyleHint(QFont::Monospace);
     font.setFixedPitch(true);
     font.setPointSize(FONT_SIZE);
 
