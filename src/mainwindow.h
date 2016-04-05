@@ -29,8 +29,10 @@ private slots:
     bool save();
     bool saveAs();
     bool closeTab(int index);
+    bool closeActiveTab();
     void switchToTab(int index);
     void onTabSwitched(int index);
+    void setEditor(CodeEditWidget* codeEdit);
     bool assemble();
     void configureAse();
 

@@ -1,11 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QApplication>
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QFile>
 #include <QFileDialog>
 #include <QIcon>
+#include <QKeySequence>
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProcess>
@@ -15,9 +17,10 @@
 #include "aseconfigdialog.h"
 #include "codeeditwidget.h"
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    editor(0)
 {
     ui->setupUi(this);
 
@@ -108,6 +111,14 @@ bool MainWindow::closeTab(int index)
     return false;
 }
 
+bool MainWindow::closeActiveTab()
+{
+    if (ui->tabWidget->count() > 0)
+        return closeTab(ui->tabWidget->currentIndex());
+    else
+        return 0;
+}
+
 void MainWindow::switchToTab(int index)
 {
     ui->tabWidget->setCurrentIndex(index);
@@ -117,9 +128,35 @@ void MainWindow::onTabSwitched(int index)
 {
     QWidget* tab = ui->tabWidget->widget(index);
     CodeEditWidget* codeEdit = qobject_cast<CodeEditWidget*>(tab);
+    setEditor(codeEdit);
+}
+
+void MainWindow::setEditor(CodeEditWidget* codeEdit)
+{
     if (codeEdit) {
+
+        // Disconnect signals and slots from the previous editor
+        if (editor) {
+            disconnect(ui->actionSave, SIGNAL(triggered(bool)), editor, SLOT(save()));
+            disconnect(ui->actionSaveAs, SIGNAL(triggered(bool)), editor, SLOT(saveAs()));
+
+            QPlainTextEdit* textEdit = editor->textEdit();
+            disconnect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
+            disconnect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
+            disconnect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
+        }
+
         editor = codeEdit;
         updateCurrentFile();
+
+        // Hook up the necessary signals and slots for the code editor
+        connect(ui->actionSave, SIGNAL(triggered(bool)), editor, SLOT(save()));
+        connect(ui->actionSaveAs, SIGNAL(triggered(bool)), editor, SLOT(saveAs()));
+
+        QPlainTextEdit* textEdit = editor->textEdit();
+        connect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
+        connect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
+        connect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
     }
 }
 
@@ -166,6 +203,8 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionOpen, SIGNAL(triggered(bool)), this, SLOT(open()));
     connect(ui->actionSave, SIGNAL(triggered(bool)), this, SLOT(save()));
     connect(ui->actionSaveAs, SIGNAL(triggered(bool)), this, SLOT(saveAs()));
+    connect(ui->actionCloseFile, SIGNAL(triggered(bool)), this, SLOT(closeActiveTab()));
+    connect(ui->actionQuit, SIGNAL(triggered(bool)), QApplication::instance(), SLOT(quit()));
     connect(ui->actionAssemble, SIGNAL(triggered(bool)), this, SLOT(assemble()));
     connect(ui->actionConfigureAse, SIGNAL(triggered(bool)), this, SLOT(configureAse()));
 
@@ -175,18 +214,19 @@ void MainWindow::connectSignalsAndSlots()
 
 void MainWindow::setupActions()
 {
-    // Attempt to give each action an icon from the system theme
-    ui->actionCopy->setIcon(QIcon::fromTheme("edit-copy", ui->actionCopy->icon()));
-    ui->actionCut->setIcon(QIcon::fromTheme("edit-cut", ui->actionCut->icon()));
-    ui->actionPaste->setIcon(QIcon::fromTheme("edit-paste", ui->actionPaste->icon()));
+    // Set up keyboard shortcuts
+    ui->actionNew->setShortcut(QKeySequence::New);
+    ui->actionOpen->setShortcut(QKeySequence::Open);
+    ui->actionSave->setShortcut(QKeySequence::Save);
+    ui->actionSaveAs->setShortcut(QKeySequence::SaveAs);
+    ui->actionCloseFile->setShortcut(QKeySequence::Close);
+    ui->actionQuit->setShortcut(QKeySequence::Quit);
 
-    ui->actionNew->setIcon(QIcon::fromTheme("document-new", ui->actionNew->icon()));
-    ui->actionOpen->setIcon(QIcon::fromTheme("document-open", ui->actionOpen->icon()));
-    ui->actionSave->setIcon(QIcon::fromTheme("document-save", ui->actionSave->icon()));
-    ui->actionSaveAs->setIcon(QIcon::fromTheme("document-save-as", ui->actionSaveAs->icon()));
+    ui->actionCut->setShortcut(QKeySequence::Cut);
+    ui->actionCopy->setShortcut(QKeySequence::Copy);
+    ui->actionPaste->setShortcut(QKeySequence::Paste);
 
-    ui->actionAssemble->setIcon(QIcon::fromTheme("media-playback-start", ui->actionAssemble->icon()));
-    ui->actionInfo->setIcon(QIcon::fromTheme("help-about", ui->actionInfo->icon()));
+    ui->actionAssemble->setShortcut(QKeySequence::Refresh);
 
     // User should only be able to "assemble" on Linux or Windows
 #if defined(Q_OS_LINUX) || defined(Q_OS_WIN)
@@ -245,21 +285,25 @@ void MainWindow::updateCurrentFile()
 
 void MainWindow::loadFile(const QString& fileName)
 {
-    CodeEditWidget* oldEditor = editor;
-    editor = new CodeEditWidget();
-    editor->setFileName(fileName);
+    CodeEditWidget* codeEdit;
 
-    if (editor->load()) {
-        const int index = ui->tabWidget->addTab(editor, editor->fileName());
-        switchToTab(index);
+    if (ui->tabWidget->count() == 1 && editor->textEdit()->document()->isEmpty())
+        codeEdit = editor;
+    else
+        codeEdit = new CodeEditWidget();
 
+    codeEdit->setFileName(fileName);
+
+    if (codeEdit->load()) {
         if (!fileName.isEmpty())
             statusBar()->showMessage(tr("File loaded"), 2000);
 
-        updateCurrentFile();
+        setEditor(codeEdit);
+
+        const int index = ui->tabWidget->addTab(editor, editor->fileName());
+        switchToTab(index);
     } else {
-        delete editor;
-        editor = oldEditor;
+        delete codeEdit;
         statusBar()->showMessage(tr("File failed to load"), 3000);
     }
 }

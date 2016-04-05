@@ -74,6 +74,7 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
+    <addaction name="actionCloseFile"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -148,7 +149,7 @@
   </widget>
   <action name="actionNew">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="document-new" resource="../resources.qrc">
      <normaloff>:/images/filenew.png</normaloff>:/images/filenew.png</iconset>
    </property>
    <property name="text">
@@ -160,7 +161,7 @@
   </action>
   <action name="actionOpen">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="document-open" resource="../resources.qrc">
      <normaloff>:/images/fileopen.png</normaloff>:/images/fileopen.png</iconset>
    </property>
    <property name="text">
@@ -172,7 +173,7 @@
   </action>
   <action name="actionSave">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="document-save" resource="../resources.qrc">
      <normaloff>:/images/filesave.png</normaloff>:/images/filesave.png</iconset>
    </property>
    <property name="text">
@@ -183,18 +184,24 @@
    </property>
   </action>
   <action name="actionSaveAs">
+   <property name="icon">
+    <iconset theme="document-save-as"/>
+   </property>
    <property name="text">
     <string>Save As...</string>
    </property>
   </action>
   <action name="actionQuit">
+   <property name="icon">
+    <iconset theme="application-exit"/>
+   </property>
    <property name="text">
     <string>Quit</string>
    </property>
   </action>
   <action name="actionUndo">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="edit-undo" resource="../resources.qrc">
      <normaloff>:/images/editundo.png</normaloff>:/images/editundo.png</iconset>
    </property>
    <property name="text">
@@ -206,7 +213,7 @@
   </action>
   <action name="actionRedo">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="edit-redo" resource="../resources.qrc">
      <normaloff>:/images/editredo.png</normaloff>:/images/editredo.png</iconset>
    </property>
    <property name="text">
@@ -218,7 +225,7 @@
   </action>
   <action name="actionCut">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="edit-cut" resource="../resources.qrc">
      <normaloff>:/images/editcut.png</normaloff>:/images/editcut.png</iconset>
    </property>
    <property name="text">
@@ -230,7 +237,7 @@
   </action>
   <action name="actionCopy">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="edit-copy" resource="../resources.qrc">
      <normaloff>:/images/editcopy.png</normaloff>:/images/editcopy.png</iconset>
    </property>
    <property name="text">
@@ -242,7 +249,7 @@
   </action>
   <action name="actionPaste">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="edit-paste" resource="../resources.qrc">
      <normaloff>:/images/editpaste.png</normaloff>:/images/editpaste.png</iconset>
    </property>
    <property name="text">
@@ -253,13 +260,16 @@
    </property>
   </action>
   <action name="actionInfo">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
    <property name="text">
     <string>Info...</string>
    </property>
   </action>
   <action name="actionAssemble">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset theme="media-playback-start" resource="../resources.qrc">
      <normaloff>:/images/assemble.png</normaloff>:/images/assemble.png</iconset>
    </property>
    <property name="text">
@@ -272,6 +282,14 @@
   <action name="actionConfigureAse">
    <property name="text">
     <string>Configure ase100</string>
+   </property>
+  </action>
+  <action name="actionCloseFile">
+   <property name="text">
+    <string>Close</string>
+   </property>
+   <property name="toolTip">
+    <string>Close the current file</string>
    </property>
   </action>
  </widget>
