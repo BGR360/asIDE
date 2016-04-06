@@ -174,6 +174,9 @@ bool CodeEditWidget::saveFile(const QString& fileName)
     QApplication::restoreOverrideCursor();
 #endif
 
+    fileBeingEdited = fileName;
+    textEdit()->document()->setModified(false);
+
     return true;
 }
 

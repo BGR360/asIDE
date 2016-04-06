@@ -79,6 +79,7 @@ void MainWindow::open()
 bool MainWindow::save()
 {
     if (editor->save()) {
+        updateCurrentFile();
         statusBar()->showMessage(tr("File saved"), 2000);
         return true;
     }
