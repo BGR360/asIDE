@@ -131,6 +131,7 @@ void MainWindow::onTabSwitched(int index)
     QWidget* tab = ui->tabWidget->widget(index);
     CodeEditWidget* codeEdit = qobject_cast<CodeEditWidget*>(tab);
     setEditor(codeEdit);
+    updateCurrentFile();
 
     // Check to see if the "View Labels" and "View MIF" options are available for this file
     QString fileExtension = editor->fileExtension();
@@ -147,6 +148,9 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
 {
     if (codeEdit) {
 
+        if (codeEdit == editor)
+            return;
+
         // Disconnect signals and slots from the previous editor
         if (editor) {
             QPlainTextEdit* textEdit = editor->textEdit();
@@ -159,7 +163,6 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
         }
 
         editor = codeEdit;
-        updateCurrentFile();
 
         // Hook up the necessary signals and slots for the code editor
         QPlainTextEdit* textEdit = editor->textEdit();
@@ -375,6 +378,8 @@ void MainWindow::loadFile(const QString& fileName)
 {
     CodeEditWidget* codeEdit;
 
+    // If all we have open is an untitled file, use the current tab
+    // Otherwise, open a new one
     if (ui->tabWidget->count() == 1 && editor->textEdit()->document()->isEmpty())
         codeEdit = editor;
     else
