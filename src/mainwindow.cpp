@@ -366,8 +366,10 @@ void MainWindow::updateCurrentFile()
 
     QString stripped = (editor) ? editor->fileName() : QString();
     if (!stripped.isEmpty()) {
-        if (editor->textEdit()->document()->isModified())
+        if (editor->textEdit()->document()->isModified()) {
             stripped += "*";
+            setWindowModified(true);
+        }
         setWindowTitle(stripped + " - asIDE");
         ui->tabWidget->setTabText(ui->tabWidget->currentIndex(), stripped);
     } else {
