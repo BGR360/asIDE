@@ -15,15 +15,19 @@ CONFIG += c++11
 
 
 SOURCES += src/main.cpp \
-    src/mainwindow.cpp \
-    src/syntaxhighlighter.cpp \
-    src/aseconfigdialog.cpp \
-    src/codeeditwidget.cpp
+    src/gui/mainwindow.cpp \
+    src/gui/aseconfigdialog.cpp \
+    src/gui/codeeditwidget.cpp \
+    src/intellisense/syntaxhighlighter.cpp \
+    src/intellisense/token.cpp \
+    src/intellisense/documenttokenizer.cpp
 
-HEADERS  += src/mainwindow.h \
-    src/syntaxhighlighter.h \
-    src/aseconfigdialog.h \
-    src/codeeditwidget.h
+HEADERS  += src/gui/mainwindow.h \
+    src/gui/aseconfigdialog.h \
+    src/gui/codeeditwidget.h \
+    src/intellisense/syntaxhighlighter.h \ 
+    src/intellisense/token.h \
+    src/intellisense/documenttokenizer.h
 
 FORMS    += forms/mainwindow.ui \
     forms/aseconfigdialog.ui \

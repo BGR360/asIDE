@@ -7,7 +7,7 @@
 #include <QMessageBox>
 #include <QTextStream>
 
-#include "syntaxhighlighter.h"
+#include <src/intellisense/syntaxhighlighter.h>
 
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),

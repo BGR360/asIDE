@@ -1,7 +1,8 @@
-#include "mainwindow.h"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
+
+#include <src/gui/mainwindow.h>
 
 int main(int argc, char *argv[])
 {
