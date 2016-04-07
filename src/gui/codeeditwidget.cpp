@@ -5,6 +5,8 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QMessageBox>
+#include <QTextCursor>
+#include <QTextDocument>
 #include <QTextStream>
 
 #include <src/intellisense/syntaxhighlighter.h>
@@ -15,6 +17,7 @@ CodeEditWidget::CodeEditWidget(QWidget* parent) :
 {
     ui->setupUi(this);
 
+    connectSignalsAndSlots();
     setupTextEdit();
     setupSyntaxHighlighter();
 }
@@ -92,6 +95,34 @@ void CodeEditWidget::closeEvent(QCloseEvent* event)
         event->accept();
     else
         event->ignore();
+}
+
+void CodeEditWidget::autoIndent()
+{
+    QTextCursor cursor = textEdit()->textCursor();
+    QTextDocument* doc = textEdit()->document();
+
+    // Auto-indent if we just started a new line
+    if (cursor.atBlockStart()) {
+        int previousLineNumber = cursor.block().firstLineNumber() - 1;
+        QTextBlock previousBlock = doc->findBlockByNumber(previousLineNumber);
+        QString previousLine = previousBlock.text();
+
+        // Look at the previous line and copy all text that comes before
+        // the first non-whitespace character (or, if whole line is whitespace,
+        // take everything up until the newline)
+        QRegExp whitespaceRegex("[^\\s]|\\n");
+        int indexOfFirstNonWhitespace = whitespaceRegex.indexIn(previousLine);
+        QString previousLineWhitespace = previousLine.left(indexOfFirstNonWhitespace);
+
+        // Now insert this whitespace at the beginning of the current line
+        cursor.insertText(previousLineWhitespace);
+    }
+}
+
+void CodeEditWidget::connectSignalsAndSlots()
+{
+    connect(textEdit(), SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
 }
 
 void CodeEditWidget::setupTextEdit()

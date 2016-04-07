@@ -37,6 +37,9 @@ public slots:
 protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
 
+private slots:
+    void autoIndent();
+
 private:
     static const int FONT_SIZE = 14;    // in points
     static const int TAB_WIDTH = 8;     // in spaces
@@ -47,6 +50,7 @@ private:
     QSyntaxHighlighter* highlighter;
     QString fileBeingEdited;
 
+    void connectSignalsAndSlots();
     void setupTextEdit();
     void setupSyntaxHighlighter();
 
