@@ -18,14 +18,14 @@ void DocumentTokenizer::setDocument(QTextDocument* doc)
 
 }
 
-QSet<Token*> DocumentTokenizer::tokens()
+TokenCollection DocumentTokenizer::tokens()
 {
-    return QSet<Token*>();
+    return TokenCollection();
 }
 
-bool DocumentTokenizer::hasToken(Token* token) const
+bool DocumentTokenizer::hasToken(const Token* token) const
 {
-    return false;
+    return hasToken(*token);
 }
 
 bool DocumentTokenizer::hasToken(const Token& token) const
@@ -33,34 +33,79 @@ bool DocumentTokenizer::hasToken(const Token& token) const
     return false;
 }
 
-QVector<Token*> DocumentTokenizer::getTokensInLine(int lineNumber) const
+ConstTokenList DocumentTokenizer::getTokensInLine(int lineNumber) const
 {
-    return QVector<Token*>();
+    return ConstTokenList();
 }
 
-Token* DocumentTokenizer::addToken(const QString& value, Token::TokenType type, int line, int column)
+const Token* DocumentTokenizer::addToken(const QString& value, Token::TokenType type, int line, int column)
 {
-    return NULL;
+    Token input;
+    input.value = value;
+    input.type = type;
+    input.location.lineNumber = line;
+    input.location.columnNumber = column;
+    return addToken(input);
 }
 
-Token* DocumentTokenizer::addToken(const Token& token)
+const Token* DocumentTokenizer::addToken(const Token& token)
 {
-    return NULL;
-}
+    typedef TokenCollection::iterator setIter;
+    typedef TokenList::iterator vecIter;
 
-bool DocumentTokenizer::removeToken(const QString& value, int line)
-{
-    return false;
+    setIter foundToken = mTokens.find(token);
+    if (foundToken == mTokens.end()) {
+        setIter insertedToken = mTokens.insert(token);
+        Token* pNewToken = &(*insertedToken);
+
+        // Add the new token to all of our data structures
+
+        // First, insert it into the proper position in the line
+        int line = token.location.lineNumber;
+        if (mTokensByLine.contains(line)) {
+            TokenList& tokensInLine = mTokensByLine[line];
+            vecIter it = tokensInLine.begin();
+            vecIter whereToInsert = it;
+            int column = token.location.columnNumber;
+            for(++it; it != tokensInLine.end(); ++it) {
+                if (column < (*it)->location.columnNumber) {
+                    whereToInsert = it;
+                    break;
+                }
+            }
+
+            tokensInLine.insert();
+
+            // Adjust the column values of all tokens that come after
+            // the newly inserted one
+            int length = token.value.length();
+            for (it = whereToInsert; it != tokensInLine.end(); ++it) {
+                (*it)->location.columnNumber += length;
+            }
+        }
+
+        return pNewToken;
+    } else {
+        return &(*foundToken);
+    }
 }
 
 bool DocumentTokenizer::removeToken(const Token& token)
 {
+    typedef TokenCollection::iterator iterator;
+
+    iterator foundToken = mTokens.find(token);
+    if (foundToken != mTokens.end()) {
+        mTokens.erase(foundToken);
+        return true;
+    }
+
     return false;
 }
 
 bool DocumentTokenizer::removeToken(const Token* token)
 {
-    return false;
+    return removeToken(*token);
 }
 
 void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved, int charsAdded)
