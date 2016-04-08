@@ -1,11 +1,12 @@
 #include "documenttokenizer.h"
 
+#include <QDebug>
 #include <QTextDocument>
 
 DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
-    mDoc(doc)
+    mDoc(0)
 {
-    reset();
+    setDocument(doc);
 }
 
 QTextDocument* DocumentTokenizer::document()
@@ -16,11 +17,18 @@ QTextDocument* DocumentTokenizer::document()
 void DocumentTokenizer::setDocument(QTextDocument* doc)
 {
     // Disconnect signals and slots from previous document
+    if (mDoc) {
+        disconnect(mDoc, SIGNAL(contentsChange(int,int,int)), this, SLOT(onDocumentContentsChanged(int,int,int)));
+    }
 
     mDoc = doc;
 
     // Connect signals and slots to new documents
+    if (mDoc) {
+        connect(mDoc, SIGNAL(contentsChange(int,int,int)), this, SLOT(onDocumentContentsChanged(int,int,int)));
+    }
 
+    reset();
 }
 
 ConstTokenList DocumentTokenizer::tokens()
@@ -73,5 +81,8 @@ void DocumentTokenizer::reset()
 
 void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved, int charsAdded)
 {
-
+    qDebug() << "Document contents changed:" <<
+                " pos=" << position <<
+                " numRemoved=" << charsRemoved <<
+                " numAdded=" << charsAdded;
 }
