@@ -3,39 +3,43 @@
 #include <QTextDocument>
 
 DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
-    mDoc(0)
+    mDoc(doc)
 {
-
+    reset();
 }
 
 QTextDocument* DocumentTokenizer::document()
 {
-    return NULL;
+    return mDoc;
 }
 
 void DocumentTokenizer::setDocument(QTextDocument* doc)
 {
+    // Disconnect signals and slots from previous document
+
+    mDoc = doc;
+
+    // Connect signals and slots to new documents
 
 }
 
-TokenCollection DocumentTokenizer::tokens()
+ConstTokenList DocumentTokenizer::tokens()
 {
-    return TokenCollection();
+    ConstTokenList ret;
+    TokenList::const_iterator i;
+    for (i = mTokens.constBegin(); i != mTokens.constEnd(); ++i) {
+        ret.append(&(*i));
+    }
+    return ret;
 }
 
-bool DocumentTokenizer::hasToken(const Token* token) const
+ConstTokenList DocumentTokenizer::tokensInLine(int lineNumber) const
 {
-    return hasToken(*token);
-}
-
-bool DocumentTokenizer::hasToken(const Token& token) const
-{
-    return false;
-}
-
-ConstTokenList DocumentTokenizer::getTokensInLine(int lineNumber) const
-{
-    return ConstTokenList();
+    TokenLineMap::const_iterator found = mTokensByLine.find(lineNumber);
+    if (found != mTokensByLine.constEnd())
+        return *found;
+    else
+        return ConstTokenList();
 }
 
 const Token* DocumentTokenizer::addToken(const QString& value, Token::TokenType type, int line, int column)
@@ -43,69 +47,28 @@ const Token* DocumentTokenizer::addToken(const QString& value, Token::TokenType 
     Token input;
     input.value = value;
     input.type = type;
-    input.location.lineNumber = line;
-    input.location.columnNumber = column;
-    return addToken(input);
+    return addToken(input, line, column);
 }
 
-const Token* DocumentTokenizer::addToken(const Token& token)
+const Token* DocumentTokenizer::addToken(const Token& token, int line, int column)
 {
-    typedef TokenCollection::iterator setIter;
-    typedef TokenList::iterator vecIter;
-
-    setIter foundToken = mTokens.find(token);
-    if (foundToken == mTokens.end()) {
-        setIter insertedToken = mTokens.insert(token);
-        Token* pNewToken = &(*insertedToken);
-
-        // Add the new token to all of our data structures
-
-        // First, insert it into the proper position in the line
-        int line = token.location.lineNumber;
-        if (mTokensByLine.contains(line)) {
-            TokenList& tokensInLine = mTokensByLine[line];
-            vecIter it = tokensInLine.begin();
-            vecIter whereToInsert = it;
-            int column = token.location.columnNumber;
-            for(++it; it != tokensInLine.end(); ++it) {
-                if (column < (*it)->location.columnNumber) {
-                    whereToInsert = it;
-                    break;
-                }
-            }
-
-            tokensInLine.insert();
-
-            // Adjust the column values of all tokens that come after
-            // the newly inserted one
-            int length = token.value.length();
-            for (it = whereToInsert; it != tokensInLine.end(); ++it) {
-                (*it)->location.columnNumber += length;
-            }
-        }
-
-        return pNewToken;
-    } else {
-        return &(*foundToken);
-    }
+    return NULL;
 }
 
 bool DocumentTokenizer::removeToken(const Token& token)
 {
-    typedef TokenCollection::iterator iterator;
-
-    iterator foundToken = mTokens.find(token);
-    if (foundToken != mTokens.end()) {
-        mTokens.erase(foundToken);
-        return true;
-    }
-
     return false;
 }
 
 bool DocumentTokenizer::removeToken(const Token* token)
 {
     return removeToken(*token);
+}
+
+void DocumentTokenizer::reset()
+{
+    mTokens.clear();
+    mTokensByLine.clear();
 }
 
 void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved, int charsAdded)

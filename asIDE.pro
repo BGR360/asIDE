@@ -19,7 +19,6 @@ SOURCES += src/main.cpp \
     src/gui/aseconfigdialog.cpp \
     src/gui/codeeditwidget.cpp \
     src/intellisense/syntaxhighlighter.cpp \
-    src/intellisense/token.cpp \
     src/intellisense/documenttokenizer.cpp
 
 HEADERS  += src/gui/mainwindow.h \
