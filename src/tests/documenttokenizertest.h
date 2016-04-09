@@ -12,6 +12,8 @@ public:
 private slots:
     void testEmptyDocument();
     void testNoDocument();
+    void testLines_data();
+    void testLines();
     void documents_data();
     void documents();
 };

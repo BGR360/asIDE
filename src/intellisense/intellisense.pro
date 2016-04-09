@@ -4,7 +4,8 @@ TEMPLATE = lib
 DEFINES += LIBRARY_LIBRARY
 
 SOURCES += syntaxhighlighter.cpp \
-    documenttokenizer.cpp
+    documenttokenizer.cpp \
+    token.cpp
 
 HEADERS += syntaxhighlighter.h \ 
     documenttokenizer.h \

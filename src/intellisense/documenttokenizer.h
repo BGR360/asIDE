@@ -28,6 +28,7 @@ public:
     ConstTokenList tokens();
     ConstTokenList tokensInLine(int lineNumber) const;
     int numTokens() const;
+    int numLines() const;
 
 signals:
     void documentChanged(QTextDocument* newDocument);
@@ -41,6 +42,8 @@ protected:
     bool removeToken(const Token* token);
 
     void reset();
+    void parse();
+    void parse(int beginPos, int endPos);
 
 private slots:
     void onDocumentContentsChanged(int position, int charsRemoved,

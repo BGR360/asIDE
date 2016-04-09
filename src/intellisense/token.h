@@ -2,19 +2,28 @@
 #define TOKEN_H
 
 #include <QHash>
+#include <QMetaType>
+#include <QRegExp>
 #include <QString>
 
 struct Token
 {
     enum TokenType
     {
-        Keyword,
         Comment,
+        Instruction,
+        Include,
+        IncludeFile,
         Label,
-        Literal,
+        IntLiteral,
+        CharLiteral,
+        Newline,
         Whitespace,
-        Newline
+        Unrecognized,
+        NUM_TOKEN_TYPES
     };
+
+    static const QRegExp REGEX[NUM_TOKEN_TYPES - 1];
 
     QString value;
     TokenType type;

@@ -1,6 +1,7 @@
 #include "documenttokenizer.h"
 
 #include <QDebug>
+#include <QStringRef>
 #include <QTextDocument>
 
 DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
@@ -55,6 +56,11 @@ int DocumentTokenizer::numTokens() const
     return mTokens.size();
 }
 
+int DocumentTokenizer::numLines() const
+{
+    return mTokensByLine.size();
+}
+
 const Token* DocumentTokenizer::addToken(const QString& value, Token::TokenType type, int line, int column)
 {
     Token input;
@@ -82,6 +88,26 @@ void DocumentTokenizer::reset()
 {
     mTokens.clear();
     mTokensByLine.clear();
+}
+
+void DocumentTokenizer::parse()
+{
+    if (mDoc) {
+        int beginPos = 0;
+        int endPos = mDoc->characterCount();
+        parse(beginPos, endPos);
+    }
+}
+
+void DocumentTokenizer::parse(int beginPos, int endPos)
+{
+    if (mDoc) {
+        QString document = mDoc->toPlainText();
+        QString searchSpace = document.mid(beginPos, endPos - beginPos);
+
+        // First split the document by lines
+        QVector<QStringRef> lines = searchSpace.splitRef(Token::REGEX[Token::Newline], QString::SkipEmptyParts);
+    }
 }
 
 void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved, int charsAdded)

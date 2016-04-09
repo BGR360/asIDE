@@ -26,6 +26,35 @@ void DocumentTokenizerTest::testNoDocument()
     QVERIFY(tokenizer.numTokens() == 0);
 }
 
+void DocumentTokenizerTest::testLines_data()
+{
+    QTest::addColumn<QString>("docText");
+    QTest::addColumn<int>("numLines");
+
+    QTest::newRow("1 line") << "label" << 1;
+    QTest::newRow("2 lines (2nd empty)") << "label\n" << 2;
+    QTest::newRow("3 lines") << "label1\n"
+                                "label2\n"
+                                "label3" << 3;
+    QTest::newRow("6 lines misc") << "a\tb\n"
+                                     "  \n"
+                                     "\n"
+                                     "hello\r\n"
+                                     "adsfj;vn;sakjdl;v ans;dkjfvv  \n"
+                                     "1" << 6;
+}
+
+void DocumentTokenizerTest::testLines()
+{
+    QFETCH(QString, docText);
+    QFETCH(int, numLines);
+
+    QTextDocument doc(docText);
+    int result = DocumentTokenizer(&doc).numLines();
+
+    QCOMPARE(result, numLines);
+}
+
 void DocumentTokenizerTest::documents_data()
 {
     QTest::addColumn<QString>("docText");
@@ -37,8 +66,7 @@ void DocumentTokenizerTest::documents_data()
                                                  });
     QTest::newRow("Label with spaces") << "label  " <<
                                           QVector<Token>({
-                                                             {"label", Token::Label},
-                                                             {"  ", Token::Whitespace}
+                                                             {"label", Token::Label}
                                                          });
     QTest::newRow("2 labels") << "label1\n"
                                  "label2" <<
@@ -50,27 +78,21 @@ void DocumentTokenizerTest::documents_data()
     QTest::newRow("4 full lines") << "// here we do a thing\n"
                                      "function_thing\tadd\ta\tb\tc\n"
                                      "\t\tret\tfunc_ra\n"
-                                     "a\t0x0012" <<
+                                     "a\t0x0012\t?" <<
                                      QVector<Token>({
                                                         {"// here we do a thing", Token::Comment},
                                                         {"\n",  Token::Newline},
                                                         {"function_thing", Token::Label},
-                                                        {"\t",  Token::Whitespace},
-                                                        {"add", Token::Keyword},
-                                                        {"\t",  Token::Whitespace},
+                                                        {"add", Token::Instruction},
                                                         {"a",   Token::Label},
-                                                        {"\t",  Token::Whitespace},
                                                         {"b",   Token::Label},
-                                                        {"\t",  Token::Whitespace},
                                                         {"c",   Token::Label},
                                                         {"\n",  Token::Newline},
-                                                        {"\t\t",Token::Whitespace},
-                                                        {"ret", Token::Keyword},
-                                                        {"\t",  Token::Whitespace},
+                                                        {"ret", Token::Instruction},
                                                         {"func_ra", Token::Label},
                                                         {"a",   Token::Label},
-                                                        {"\t",  Token::Whitespace},
-                                                        {"0x0012",  Token::Literal}
+                                                        {"0x12",  Token::IntLiteral},
+                                                        {"?",   Token::Unrecognized}
                                                     });
 }
 
@@ -82,11 +104,11 @@ void DocumentTokenizerTest::documents()
     QTextDocument doc(docText);
     ConstTokenList tokens = DocumentTokenizer(&doc).tokens();
 
-    QVERIFY2(tokens.size() == expectedTokens.size(), "Unequal number of tokens");
+    QCOMPARE(tokens.size(), expectedTokens.size());
 
     ConstTokenList::const_iterator i = tokens.constBegin();
     QVector<Token>::const_iterator e = expectedTokens.constBegin();
     for (; i != tokens.end(); ++i, ++e) {
-        QVERIFY(**i == *e);
+        QCOMPARE(**i, *e);
     }
 }
