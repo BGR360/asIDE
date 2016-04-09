@@ -9,7 +9,7 @@
 #include <QTextDocument>
 #include <QTextStream>
 
-#include <src/intellisense/syntaxhighlighter.h>
+#include <syntaxhighlighter.h>
 
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),
