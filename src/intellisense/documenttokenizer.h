@@ -27,6 +27,7 @@ public:
 
     ConstTokenList tokens();
     ConstTokenList tokensInLine(int lineNumber) const;
+    int numTokens() const;
 
 signals:
     void documentChanged(QTextDocument* newDocument);

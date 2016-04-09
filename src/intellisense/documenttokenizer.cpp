@@ -50,6 +50,11 @@ ConstTokenList DocumentTokenizer::tokensInLine(int lineNumber) const
         return ConstTokenList();
 }
 
+int DocumentTokenizer::numTokens() const
+{
+    return mTokens.size();
+}
+
 const Token* DocumentTokenizer::addToken(const QString& value, Token::TokenType type, int line, int column)
 {
     Token input;

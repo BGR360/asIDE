@@ -10,14 +10,17 @@ struct Token
     {
         Keyword,
         Comment,
-        Identifier,
+        Label,
         Literal,
-        Whitespace
+        Whitespace,
+        Newline
     };
 
     QString value;
     TokenType type;
 };
+
+Q_DECLARE_METATYPE(Token);
 
 inline bool operator==(const Token& a, const Token& b)
 {
