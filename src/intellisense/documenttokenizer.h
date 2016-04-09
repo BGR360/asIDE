@@ -13,8 +13,7 @@ class QTextDocument;
 QT_END_NAMESPACE
 
 typedef QList<Token> TokenList;
-typedef QList<Token> ConstTokenList;
-typedef QVector<ConstTokenList> TokenLineMap;
+typedef QVector<TokenList> TokenLineMap;
 
 class INTELLISENSE_EXPORT DocumentTokenizer : public QObject
 {
@@ -26,15 +25,15 @@ public:
     QTextDocument* document();
     void setDocument(QTextDocument* doc);
 
-    ConstTokenList tokens();
-    ConstTokenList tokensInLine(int lineNumber) const;
+    TokenList tokens();
+    TokenList tokensInLine(int lineNumber) const;
     int numTokens() const;
     int numLines() const;
 
 signals:
     void documentChanged(QTextDocument* newDocument);
-    void tokensAdded(const ConstTokenList& tokens);
-    void tokensRemoved(const ConstTokenList& tokens);
+    void tokensAdded(const TokenList& tokens);
+    void tokensRemoved(const TokenList& tokens);
 
 protected:
     const Token* addToken(const QString& value, Token::TokenType type, int line, int column);

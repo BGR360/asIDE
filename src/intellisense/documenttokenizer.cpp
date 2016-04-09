@@ -33,9 +33,9 @@ void DocumentTokenizer::setDocument(QTextDocument* doc)
     reset();
 }
 
-ConstTokenList DocumentTokenizer::tokens()
+TokenList DocumentTokenizer::tokens()
 {
-    ConstTokenList ret;
+    TokenList ret;
     TokenList::const_iterator i;
     for (i = mTokens.constBegin(); i != mTokens.constEnd(); ++i) {
         ret.append(*i);
@@ -43,13 +43,13 @@ ConstTokenList DocumentTokenizer::tokens()
     return ret;
 }
 
-ConstTokenList DocumentTokenizer::tokensInLine(int lineNumber) const
+TokenList DocumentTokenizer::tokensInLine(int lineNumber) const
 {
     TokenLineMap::const_iterator found = mTokensByLine.constBegin() + lineNumber;
     if (found != mTokensByLine.constEnd())
         return *found;
     else
-        return ConstTokenList();
+        return TokenList();
 }
 
 int DocumentTokenizer::numTokens() const
@@ -81,7 +81,7 @@ void DocumentTokenizer::addTokensToLine(const TokenList& tokens, int line)
     for (i = tokens.constBegin(); i != tokens.constEnd(); ++i) {
         TokenList::const_iterator addedToken = mTokens.insert(mTokens.end(), *i);
         while (mTokensByLine.size() <= line)
-            mTokensByLine.push_back(ConstTokenList());
+            mTokensByLine.push_back(TokenList());
         mTokensByLine[line].push_back(*addedToken);
     }
 }
@@ -119,10 +119,16 @@ void DocumentTokenizer::parse(int beginPos, int endPos)
 
         // First split the document by lines
         QStringList lines = searchSpace.split(Token::REGEX[Token::Newline], QString::KeepEmptyParts);
+
+        // Then parse each line
         for (int line = 0; line < lines.size(); ++line) {
             TokenList tokensInLine = parseLine(lines[line]);
             addTokensToLine(tokensInLine, line);
         }
+
+        // Get rid of that trailing newline
+        mTokens.pop_back();
+        mTokensByLine[numLines() - 1].pop_back();
     }
 }
 
@@ -133,12 +139,13 @@ TokenList DocumentTokenizer::parseLine(const QString& line)
     // Watch out for comments!
     int indexOfComment = Token::REGEX[Token::Comment].indexIn(line);
     if (indexOfComment >= 0) {
-        return TokenList();
-    }
-
-    QStringList words = line.split(Token::REGEX[Token::Whitespace], QString::SkipEmptyParts);
-    foreach (const QString& word, words) {
-        tokensInLine.push_back(parseWord(word));
+        tokensInLine.push_back(parseWord(line));
+    } else {
+        // If not a comment, split the line into words and parse each word
+        QStringList words = line.split(Token::REGEX[Token::Whitespace], QString::SkipEmptyParts);
+        foreach (const QString& word, words) {
+            tokensInLine.push_back(parseWord(word));
+        }
     }
     Token newlineToken = {"\n", Token::Newline};
     tokensInLine.push_back(newlineToken);

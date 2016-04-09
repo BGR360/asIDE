@@ -16,6 +16,8 @@ private slots:
     void testLines();
     void documents_data();
     void documents();
+    void testInsert_data();
+    void testInsert();
 };
 
 #endif // DOCUMENTTOKENIZERTEST_H
