@@ -2,6 +2,7 @@
 
 #include <QTest>
 
+#include <QSignalSpy>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QVector>
@@ -13,7 +14,18 @@ static const Token NEWLINE = {"\n", Token::Newline};
 
 void compareTokenLists(const TokenList& actual, const QVector<Token>& expected)
 {
-    QCOMPARE(actual.size(), expected.size());
+    if (actual.size() != expected.size()) {
+        qDebug() << "Number of tokens differs";
+        qDebug() << "Actual:";
+        foreach (const Token& token, actual) {
+            qDebug() << "   " << token;
+        }
+        qDebug() << "Expected:";
+        foreach (const Token& token, expected) {
+            qDebug() << "   " << token;
+        }
+        QFAIL("Number of tokens differs");
+    }
 
     TokenList::const_iterator i = actual.constBegin();
     QVector<Token>::const_iterator e = expected.constBegin();
@@ -220,13 +232,18 @@ void DocumentTokenizerTest::testInsert_data()
                                             QVector<Token>({{"call", Token::Instruction}});
 
     QTest::newRow("lines --> one line") << "label1\n"
-                                           "label2" <<
+                                           "label2\n"
+                                           "\n"
+                                           "hi" <<
                                            QVector<Token>({
                                                               {"label1", Token::Label},
                                                               NEWLINE,
-                                                              {"label2", Token::Label}
+                                                              {"label2", Token::Label},
+                                                              NEWLINE,
+                                                              NEWLINE,
+                                                              {"hi", Token::Label}
                                                           }) <<
-                                           3 << 12 << "\tcpfa" <<
+                                           3 << 17 << "\tcpfa" <<
                                            QVector<Token>({
                                                               {"lab", Token::Label},
                                                               {"cpfa", Token::Instruction}
@@ -246,6 +263,8 @@ void DocumentTokenizerTest::testInsert()
     QTextCursor cursor(&doc);
     DocumentTokenizer tokenizer(&doc);
 
+    QSignalSpy spy(&doc, SIGNAL(contentsChange(int, int, int)));
+
     // Compare the initial list of tokens
     TokenList initialTokens = tokenizer.tokens();
     compareTokenLists(initialTokens, expInitialTokens);
@@ -262,7 +281,51 @@ void DocumentTokenizerTest::testInsert()
 
     qDebug() << doc.toPlainText();
 
+    qDebug() << spy.count();
+
     // Compare the final list of tokens
     TokenList finalTokens = tokenizer.tokens();
     compareTokenLists(finalTokens, expFinalTokens);
 }
+
+void DocumentTokenizerTest::testSignalSpy()
+{
+    QTextDocument* doc = new QTextDocument("");
+    QTextCursor* cursor = new QTextCursor(doc);
+    DocumentTokenizer tokenizer(doc);
+
+    QSignalSpy spy1(doc, SIGNAL(contentsChange(int, int, int)));
+    QSignalSpy spy2(doc, SIGNAL(contentsChanged()));
+
+    // Compare the initial list of tokens
+    doc->setPlainText("ello love");
+
+    QCOMPARE(spy1.count(), 1);
+    QCOMPARE(spy2.count(), 1);
+
+    doc->setPlainText("hi");
+
+    QCOMPARE(spy1.count(), 2);
+    QCOMPARE(spy2.count(), 2);
+
+    delete doc;
+    delete cursor;
+}
+
+void DocumentTokenizerTest::testCursorMove()
+{
+    QTextDocument* doc = new QTextDocument("ello love");
+    QTextCursor* cursor = new QTextCursor(doc);
+    DocumentTokenizer tokenizer(doc);
+
+    cursor->setPosition(4);
+    cursor->insertText(" ");
+    qDebug() << cursor;
+    cursor->deleteChar();
+    //cursor->insertText("gov ");
+
+    //delete doc;
+    //delete cursor;
+}
+
+QTEST_MAIN(DocumentTokenizerTest)

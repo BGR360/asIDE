@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QList>
 #include <QMap>
+#include <QTextCursor>
 
 #include "intellisense_global.h"
 #include "token.h"
@@ -36,11 +37,9 @@ signals:
     void tokensRemoved(const TokenList& tokens);
 
 protected:
-    const Token* addToken(const QString& value, Token::TokenType type, int line, int column);
-    const Token* addToken(const Token& token, int line, int column);
-    void addTokensToLine(const TokenList& tokens, int line);
-    bool removeToken(const Token& token);
-    bool removeToken(const Token* token);
+    void addLine();
+    void removeLine(int lineNumber);
+    void setLine(const TokenList& tokens, int line);
 
     void reset();
     void parse();
@@ -49,11 +48,17 @@ protected:
     Token parseWord(const QString& word);
 
 private slots:
-    void onDocumentContentsChanged(int position, int charsRemoved,
-                                   int charsAdded);
+    void onDocumentContentsChanged();
+    void onDocumentContentsChanged(int position, int charsRemoved, int charsAdded);
+    void onCursorPositionChanged(const QTextCursor& cursor);
+    void onLineCountChange(int newLineCount);
 
 private:
     QTextDocument* mDoc;
+    QTextCursor mCursor;
+    int mPrevCursorPos;
+    int mNextCursorPos;
+    int mPrevCursorLine;
 
     TokenList mTokens;
     TokenLineMap mTokensByLine;

@@ -18,6 +18,8 @@ private slots:
     void documents();
     void testInsert_data();
     void testInsert();
+    void testSignalSpy();
+    void testCursorMove();
 };
 
 #endif // DOCUMENTTOKENIZERTEST_H

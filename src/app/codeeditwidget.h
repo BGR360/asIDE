@@ -8,6 +8,8 @@ class QPlainTextEdit;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
+class DocumentTokenizer;
+
 namespace Ui {
 class CodeEditWidget;
 }
@@ -48,6 +50,7 @@ private:
     Ui::CodeEditWidget* ui;
 
     QSyntaxHighlighter* highlighter;
+    DocumentTokenizer* tokenizer;
     QString fileBeingEdited;
 
     void connectSignalsAndSlots();

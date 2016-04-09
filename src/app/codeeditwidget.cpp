@@ -9,6 +9,7 @@
 #include <QTextDocument>
 #include <QTextStream>
 
+#include <documenttokenizer.h>
 #include <syntaxhighlighter.h>
 
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
@@ -156,6 +157,7 @@ void CodeEditWidget::setupSyntaxHighlighter()
 {
     QTextDocument* doc = textEdit()->document();
     highlighter = new SyntaxHighlighter(doc);
+    tokenizer = new DocumentTokenizer(doc);
 }
 
 bool CodeEditWidget::maybeSave()
