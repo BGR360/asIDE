@@ -1,7 +1,7 @@
 TARGET = Intellisense
 TEMPLATE = lib
 
-DEFINES += LIBRARY_LIBRARY
+DEFINES += INTELLISENSE_LIBRARY
 
 SOURCES += syntaxhighlighter.cpp \
     documenttokenizer.cpp \
@@ -9,7 +9,8 @@ SOURCES += syntaxhighlighter.cpp \
 
 HEADERS += syntaxhighlighter.h \ 
     documenttokenizer.h \
-    token.h
+    token.h \
+    intellisense_global.h
 
 unix {
     target.path = /usr/lib

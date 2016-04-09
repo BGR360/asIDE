@@ -5,11 +5,13 @@
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 
+#include "intellisense_global.h"
+
 QT_BEGIN_NAMESPACE
 class QTextDocument;
 QT_END_NAMESPACE
 
-class SyntaxHighlighter : public QSyntaxHighlighter
+class INTELLISENSE_EXPORT SyntaxHighlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
 

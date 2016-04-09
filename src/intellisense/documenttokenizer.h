@@ -5,6 +5,7 @@
 #include <QList>
 #include <QMap>
 
+#include "intellisense_global.h"
 #include "token.h"
 
 QT_BEGIN_NAMESPACE
@@ -12,10 +13,10 @@ class QTextDocument;
 QT_END_NAMESPACE
 
 typedef QList<Token> TokenList;
-typedef QList<const Token*> ConstTokenList;
-typedef QMap<int, ConstTokenList> TokenLineMap;
+typedef QList<Token> ConstTokenList;
+typedef QVector<ConstTokenList> TokenLineMap;
 
-class DocumentTokenizer : public QObject
+class INTELLISENSE_EXPORT DocumentTokenizer : public QObject
 {
     Q_OBJECT
 
@@ -38,12 +39,15 @@ signals:
 protected:
     const Token* addToken(const QString& value, Token::TokenType type, int line, int column);
     const Token* addToken(const Token& token, int line, int column);
+    void addTokensToLine(const TokenList& tokens, int line);
     bool removeToken(const Token& token);
     bool removeToken(const Token* token);
 
     void reset();
     void parse();
     void parse(int beginPos, int endPos);
+    TokenList parseLine(const QString& line);
+    Token parseWord(const QString& word);
 
 private slots:
     void onDocumentContentsChanged(int position, int charsRemoved,
