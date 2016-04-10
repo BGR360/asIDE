@@ -10,7 +10,8 @@ DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
     mDoc(0),
     mPrevCursorPos(0),
     mNextCursorPos(0),
-    mPrevCursorLine(0)
+    mPrevCursorLine(0),
+    mReceivedLongDocumentChange(false)
 {
     setDocument(doc);
 }
@@ -46,6 +47,7 @@ void DocumentTokenizer::setDocument(QTextDocument* doc)
         connect(mDoc, SIGNAL(blockCountChanged(int)), this, SLOT(onLineCountChange(int)));
     }
 
+    reset();
     parse();
 
     emit documentChanged(mDoc);
@@ -123,6 +125,8 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
 {
     Q_ASSERT(line >= 0);
 
+    qDebug() << "setting line" << line;
+
     // Add new lines until we have at least line + 1 of them
     while (line >= numLines()) {
         addLine();
@@ -149,14 +153,24 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
 
     if (removedTokens.size() > 0)
         emit tokensRemoved(removedTokens, line);
+    else
+        qDebug() << "None removed";
+
     if (addedTokens.size() > 0)
         emit tokensAdded(addedTokens, line);
+    else
+        qDebug() << "None added";
 }
 
 void DocumentTokenizer::reset()
 {
-    mTokens.clear();
+    TokenLineMap oldTokens = mTokensByLine;
     mTokensByLine.clear();
+    int line = 0;
+    foreach (const TokenList& tokens, oldTokens) {
+        emit tokensRemoved(tokens, line);
+        line++;
+    }
 }
 
 void DocumentTokenizer::parse()
@@ -170,10 +184,11 @@ void DocumentTokenizer::parse()
 
 void DocumentTokenizer::parse(int beginPos, int endPos)
 {
-    reset();
     if (mDoc) {
         QString document = mDoc->toPlainText();
         QString searchSpace = document.mid(beginPos, endPos - beginPos);
+
+        int beginLine = getLineNumberOfPosition(beginPos);
 
         if (searchSpace.length() > 0) {
             // First split the document by lines
@@ -184,8 +199,10 @@ void DocumentTokenizer::parse(int beginPos, int endPos)
             // Then parse each line
             for (int line = 0; line < numLines; ++line) {
                 TokenList tokensInLine = parseLine(lines[line]);
-                setLine(tokensInLine, line);
+                setLine(tokensInLine, beginLine + line);
             }
+        } else {
+            reset();
         }
     }
 }
@@ -246,16 +263,37 @@ Token DocumentTokenizer::parseWord(const QString& word)
 
 void DocumentTokenizer::onDocumentContentsChanged()
 {
-    int line = 0;
-    line = mCursor.block().firstLineNumber();
-    QString lineText = mCursor.block().text();
+    qDebug() << "Document contents changed";
+    if (!mReceivedLongDocumentChange) {
+        int line = 0;
+        line = mCursor.block().firstLineNumber();
+        QString lineText = mCursor.block().text();
 
-    if (line >= 0) {
-        TokenList newTokensInLine = parseLine(lineText);
-        setLine(newTokensInLine, line);
+        if (line >= 0) {
+            TokenList newTokensInLine = parseLine(lineText);
+            setLine(newTokensInLine, line);
+        }
+
+        mPrevCursorPos = mNextCursorPos;
     }
+    mReceivedLongDocumentChange = false;
+}
 
-    mPrevCursorPos = mNextCursorPos;
+void DocumentTokenizer::onDocumentContentsChanged(int a, int b, int c)
+{
+    qDebug() << "contents changed" <<
+                "pos=" << a <<
+                "removed=" << b <<
+                "added=" << c;
+
+    const int startLine = getLineNumberOfPosition(a);
+    const int endLine = getLineNumberOfPosition(a + c);
+    const int startPos = getStartPosOfLine(startLine);
+    const int endPos = getEndPosOfLine(endLine) - 1;
+
+    qDebug() << "start=" << startPos << "end=" << endPos;
+    parse(startPos, endPos);
+    mReceivedLongDocumentChange = true;
 }
 
 void DocumentTokenizer::onCursorPositionChanged(const QTextCursor& cursor)
@@ -277,4 +315,27 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
             removeLine(lineToRemove);
         }
     }
+    // Add lines if line count was increased
+    if (difference < 0) {
+        qDebug() << -difference << "lines added";
+    }
+}
+
+int DocumentTokenizer::getLineNumberOfPosition(int pos) const
+{
+    QTextCursor cursor(mDoc);
+    if (pos >= mDoc->characterCount())
+        pos = mDoc->characterCount() - 1;
+    cursor.setPosition(pos);
+    return cursor.block().blockNumber();
+}
+
+int DocumentTokenizer::getStartPosOfLine(int line) const
+{
+    return mDoc->findBlockByNumber(line).position();
+}
+
+int DocumentTokenizer::getEndPosOfLine(int line) const
+{
+    return getStartPosOfLine(line) + mDoc->findBlockByNumber(line).length();
 }

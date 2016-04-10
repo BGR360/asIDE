@@ -49,6 +49,7 @@ protected:
 
 private slots:
     void onDocumentContentsChanged();
+    void onDocumentContentsChanged(int a, int b, int c);
     void onCursorPositionChanged(const QTextCursor& cursor);
     void onLineCountChange(int newLineCount);
 
@@ -58,9 +59,14 @@ private:
     int mPrevCursorPos;
     int mNextCursorPos;
     int mPrevCursorLine;
+    bool mReceivedLongDocumentChange;
 
     TokenList mTokens;
     TokenLineMap mTokensByLine;
+
+    int getLineNumberOfPosition(int pos) const;
+    int getStartPosOfLine(int line) const;
+    int getEndPosOfLine(int line) const;
 };
 
 #endif // DOCUMENTTOKENIZER_H

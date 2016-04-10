@@ -5,6 +5,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QMessageBox>
+#include <QStringListModel>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QTextStream>
@@ -13,11 +14,14 @@
 
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),
+    ui(new Ui::CodeEditWidget),
     highlighter(0),
-    tokenizer(0),
-    ui(new Ui::CodeEditWidget)
+    tokenizer(0)
 {
     ui->setupUi(this);
+
+    tokenModel = new QStringListModel();
+    ui->listView->setModel(tokenModel);
 
     setupTextEdit();
     setupIntellisense();
@@ -128,6 +132,7 @@ void CodeEditWidget::onTokensAdded(const TokenList& tokens, int lineNumber)
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
     }
+    updateTokenView();
 }
 
 void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
@@ -136,6 +141,7 @@ void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
     }
+    updateTokenView();
 }
 
 void CodeEditWidget::connectSignalsAndSlots()
@@ -260,4 +266,14 @@ bool CodeEditWidget::loadFile(const QString& fileName)
     fileBeingEdited = fileName;
 
     return true;
+}
+
+void CodeEditWidget::updateTokenView()
+{
+    QStringList tokenStrings;
+    TokenList allTokens = tokenizer->tokens();
+    foreach (const Token& token, allTokens) {
+        tokenStrings.push_back(QString("%1: %2").arg(Token::TYPE_NAMES[token.type]).arg(token.value));
+    }
+    tokenModel->setStringList(tokenStrings);
 }
