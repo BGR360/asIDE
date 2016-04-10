@@ -44,6 +44,7 @@ protected:
     void reset();
     void parse();
     void parse(int beginPos, int endPos);
+    void parseLines(int beginLine, int endLine);
     TokenList parseLine(const QString& line);
     Token parseWord(const QString& word);
 

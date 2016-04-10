@@ -216,6 +216,13 @@ void DocumentTokenizer::parse(int beginPos, int endPos)
     }
 }
 
+void DocumentTokenizer::parseLines(int beginLine, int endLine)
+{
+    const int beginPos = getStartPosOfLine(beginLine);
+    const int endPos = getEndPosOfLine(endLine) - 1;
+    parse(beginPos, endPos);
+}
+
 TokenList DocumentTokenizer::parseLine(const QString& line)
 {
     TokenList tokensInLine;
@@ -296,15 +303,13 @@ void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved
     mCursorPos = position;
 
     const int startLine = getLineNumberOfPosition(position);
-    const int startPos = getStartPosOfLine(startLine);
-
     const int endLineOfAdded = getLineNumberOfPosition(position + charsAdded);
-    const int endPosOfAdded = getEndPosOfLine(endLineOfAdded) - 1;
 
     qDebug() << "startLine:" << startLine;
 
-    qDebug() << "reparsing" << "start=" << startPos << "end=" << endPosOfAdded;
-    parse(startPos, endPosOfAdded);
+    qDebug() << "reparsing" << "startLine=" << startLine << "endLine=" << endLineOfAdded;
+    if (endLineOfAdded - startLine == 0)
+        parseLines(startLine, endLineOfAdded);
 
     mReceivedLongDocumentChange = true;
 }
@@ -332,7 +337,9 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
             removeLine(lineToRemove);
         }
     }
+
     // Add lines if line count was increased
+    // Also, reparse to include the new lines
     if (difference < 0) {
         difference *= -1;
         qDebug() << difference << "lines added";
@@ -340,6 +347,7 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
         for (int i = 0; i < difference; ++i) {
             addLine(lineToAdd);
         }
+        parseLines(lineToAdd, lineToAdd + difference);
     }
 }
 
