@@ -1,6 +1,7 @@
 #include "documenttokenizer.h"
 
 #include <QDebug>
+#include <QSet>
 #include <QStringRef>
 #include <QTextBlock>
 #include <QTextDocument>
@@ -46,6 +47,8 @@ void DocumentTokenizer::setDocument(QTextDocument* doc)
     }
 
     parse();
+
+    emit documentChanged(mDoc);
 }
 
 TokenList DocumentTokenizer::tokens()
@@ -86,6 +89,10 @@ void DocumentTokenizer::addLine()
     if (numLines() > 0) {
         Token newline = {"\n", Token::Newline};
         mTokensByLine[numLines() - 1].push_back(newline);
+
+        TokenList added;
+        added.push_back(newline);
+        emit tokensAdded(added, numLines() - 1);
     }
 
     // Add a new line of tokens
@@ -98,12 +105,17 @@ void DocumentTokenizer::removeLine(int lineNumber)
     Q_ASSERT(lineNumber < numLines());
 
     bool isRemovingLastLine = (lineNumber == numLines() - 1);
+    TokenList removedTokens = mTokensByLine[lineNumber];
 
     mTokensByLine.erase(mTokensByLine.begin() + lineNumber);
+    emit tokensRemoved(removedTokens, lineNumber);
 
     // Remove the newline token from the previous line if the previous line is now the last line
     if (isRemovingLastLine) {
+        removedTokens.clear();
+        removedTokens.push_back({"\n", Token::Newline});
         mTokensByLine[lineNumber - 1].pop_back();
+        emit tokensRemoved(removedTokens, lineNumber - 1);
     }
 }
 
@@ -117,12 +129,28 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
     }
 
     // Set the tokens in that line to the TokenList passed in
+    QSet<Token> oldTokens = QSet<Token>::fromList(mTokensByLine[line]);
     mTokensByLine[line] = tokens;
 
     // If that line is the last line, remove the trailing newline token
     if (line == numLines() - 1) {
         mTokensByLine[line].pop_back();
     }
+
+    // Report which tokens were added/removed
+    QSet<Token> newTokens = QSet<Token>::fromList(mTokensByLine[line]);
+
+    QSet<Token> tokensThatStayed = oldTokens;
+    tokensThatStayed.intersect(newTokens);
+
+    TokenList addedTokens, removedTokens;
+    addedTokens = newTokens.subtract(tokensThatStayed).toList();
+    removedTokens = oldTokens.subtract(tokensThatStayed).toList();
+
+    if (removedTokens.size() > 0)
+        emit tokensRemoved(removedTokens, line);
+    if (addedTokens.size() > 0)
+        emit tokensAdded(addedTokens, line);
 }
 
 void DocumentTokenizer::reset()
@@ -218,20 +246,9 @@ Token DocumentTokenizer::parseWord(const QString& word)
 
 void DocumentTokenizer::onDocumentContentsChanged()
 {
-    qDebug() << "Document contents changed";
-
     int line = 0;
-    qDebug() << "Enter mCursor";
     line = mCursor.block().firstLineNumber();
-    qDebug() << "at line" << line;
     QString lineText = mCursor.block().text();
-    qDebug() << "line text:" << lineText;
-
-    if (line != mPrevCursorLine) {
-        qDebug() << "Cursor at different line.\n"
-                    "   old:" << mPrevCursorLine <<
-                    "   new:" << line;
-    }
 
     if (line >= 0) {
         TokenList newTokensInLine = parseLine(lineText);
@@ -241,26 +258,9 @@ void DocumentTokenizer::onDocumentContentsChanged()
     mPrevCursorPos = mNextCursorPos;
 }
 
-void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved, int charsAdded)
-{
-    qDebug() << "Document contents changed." <<
-                "position=" << position <<
-                "removed=" << charsRemoved <<
-                "added=" << charsAdded;
-}
-
 void DocumentTokenizer::onCursorPositionChanged(const QTextCursor& cursor)
 {
-    qDebug() << "Cursor position changed:" <<
-                "prev=" << mPrevCursorPos <<
-                "next=" << cursor.position();
-
     int line = cursor.block().firstLineNumber();
-    qDebug() << "line=" << line << "line count=" << cursor.block().lineCount();
-
-    if (cursor.hasSelection()) {
-        qDebug() << "Selection:" << cursor.selectedText();
-    }
 
     mNextCursorPos = cursor.position();
     mPrevCursorLine = line;
@@ -270,8 +270,8 @@ void DocumentTokenizer::onCursorPositionChanged(const QTextCursor& cursor)
 void DocumentTokenizer::onLineCountChange(int newLineCount)
 {
     int difference = numLines() - newLineCount;
+    // Remove lines if line count was decreased
     if (difference > 0) {
-        qDebug() << difference << "lines removed";
         int lineToRemove = mCursor.block().firstLineNumber() + 1;
         for (int i = 0; i < difference; ++i) {
             removeLine(lineToRemove);

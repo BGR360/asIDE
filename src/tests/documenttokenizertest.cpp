@@ -322,10 +322,10 @@ void DocumentTokenizerTest::testCursorMove()
     cursor->insertText(" ");
     qDebug() << cursor;
     cursor->deleteChar();
-    //cursor->insertText("gov ");
+    cursor->insertText("gov ");
 
-    //delete doc;
-    //delete cursor;
+    delete doc;
+    delete cursor;
 }
 
 QTEST_MAIN(DocumentTokenizerTest)

@@ -8,7 +8,7 @@ class QPlainTextEdit;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
-class DocumentTokenizer;
+#include <documenttokenizer.h>
 
 namespace Ui {
 class CodeEditWidget;
@@ -41,6 +41,8 @@ protected:
 
 private slots:
     void autoIndent();
+    void onTokensAdded(const TokenList& tokens, int lineNumber);
+    void onTokensRemoved(const TokenList& tokens, int lineNumber);
 
 private:
     static const int FONT_SIZE = 14;    // in points
@@ -55,7 +57,7 @@ private:
 
     void connectSignalsAndSlots();
     void setupTextEdit();
-    void setupSyntaxHighlighter();
+    void setupIntellisense();
 
     bool maybeSave();
     bool saveFile(const QString& fileName);

@@ -9,18 +9,19 @@
 #include <QTextDocument>
 #include <QTextStream>
 
-#include <documenttokenizer.h>
 #include <syntaxhighlighter.h>
 
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),
+    highlighter(0),
+    tokenizer(0),
     ui(new Ui::CodeEditWidget)
 {
     ui->setupUi(this);
 
-    connectSignalsAndSlots();
     setupTextEdit();
-    setupSyntaxHighlighter();
+    setupIntellisense();
+    connectSignalsAndSlots();
 }
 
 CodeEditWidget::~CodeEditWidget()
@@ -121,9 +122,27 @@ void CodeEditWidget::autoIndent()
     }
 }
 
+void CodeEditWidget::onTokensAdded(const TokenList& tokens, int lineNumber)
+{
+    qDebug() << "Tokens added:";
+    foreach (const Token& token, tokens) {
+        qDebug() << "   " << token;
+    }
+}
+
+void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
+{
+    qDebug() << "Tokens removed:";
+    foreach (const Token& token, tokens) {
+        qDebug() << "   " << token;
+    }
+}
+
 void CodeEditWidget::connectSignalsAndSlots()
 {
     connect(textEdit(), SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
+    connect(tokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
+    connect(tokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
 }
 
 void CodeEditWidget::setupTextEdit()
@@ -153,7 +172,7 @@ void CodeEditWidget::setupTextEdit()
     textEdit()->setCursorWidth(CURSOR_WIDTH);
 }
 
-void CodeEditWidget::setupSyntaxHighlighter()
+void CodeEditWidget::setupIntellisense()
 {
     QTextDocument* doc = textEdit()->document();
     highlighter = new SyntaxHighlighter(doc);
