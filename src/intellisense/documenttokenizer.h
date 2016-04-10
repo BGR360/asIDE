@@ -37,7 +37,7 @@ signals:
     void tokensRemoved(const TokenList& tokens, int lineNumber);
 
 protected:
-    void addLine();
+    void addLine(int afterLine);
     void removeLine(int lineNumber);
     void setLine(const TokenList& tokens, int line);
 
@@ -49,16 +49,14 @@ protected:
 
 private slots:
     void onDocumentContentsChanged();
-    void onDocumentContentsChanged(int a, int b, int c);
+    void onDocumentContentsChanged(int position, int charsRemoved, int charsAdded);
     void onCursorPositionChanged(const QTextCursor& cursor);
     void onLineCountChange(int newLineCount);
 
 private:
     QTextDocument* mDoc;
     QTextCursor mCursor;
-    int mPrevCursorPos;
-    int mNextCursorPos;
-    int mPrevCursorLine;
+    int mCursorPos;
     bool mReceivedLongDocumentChange;
 
     TokenList mTokens;
