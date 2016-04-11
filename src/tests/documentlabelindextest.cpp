@@ -1,7 +1,9 @@
 #include "documentlabelindextest.h"
 
+#include <QSet>
 #include <QSignalSpy>
 #include <QTest>
+#include <QTextCursor>
 #include <QTextDocument>
 #include <QVector>
 
@@ -26,8 +28,8 @@ void DocumentLabelIndexTest::testDocuments_data()
 
     QTest::newRow("label after tab") << "\t\tlabel\t0" <<
                                         QVector<QString>({"label", "0"}) <<
-                                        QVector<bool>({false, false}) <<
-                                        QVector<int>({-1, -1});
+                                        QVector<bool>({true, false}) <<
+                                        QVector<int>({0, -1});
 
     QTest::newRow("three declared labels") << "label1\t0\n"
                                               "label2\t0\n"
@@ -76,22 +78,27 @@ void DocumentLabelIndexTest::testDocuments()
     }
 }
 
-typedef QVector<QVector<QVariant> >  ParamList;
+typedef QList<QList<QVariant> >  ParamList;
 
 void DocumentLabelIndexTest::testSignals_data()
 {
     QTest::addColumn<QString>("initialDocText");
-    QTest::addColumn<QString>("finalDocText");
+    QTest::addColumn<int>("cursorStart");
+    QTest::addColumn<int>("cursorEnd");
+    QTest::addColumn<QString>("insertedText");
     QTest::addColumn<ParamList>("expectedAdded");
     QTest::addColumn<ParamList>("expectedRemoved");
 
-    QTest::newRow("blank -> label") << "" << "label\t0" <<
+    QTest::newRow("blank -> label") << "" <<
+                                       0 << 0 <<
+                                       "label\t0" <<
                                        ParamList({
                                                      {"label", 0}
                                                  }) <<
                                        ParamList();
 
     QTest::newRow("blank -> labels") << "" <<
+                                        0 << 0 <<
                                         "label1 0\n"
                                         "label2 0\n"
                                         "label3 0" <<
@@ -105,9 +112,7 @@ void DocumentLabelIndexTest::testSignals_data()
     QTest::newRow("remove one label") << "label1 0\n"
                                          "label2 0\n"
                                          "label3 0" <<
-
-                                         "label1 0\n"
-                                         "label3 0" <<
+                                         9 << 18 << " " <<
                                          ParamList({
                                                        {"label3", 1}
                                                    }) <<
@@ -116,8 +121,9 @@ void DocumentLabelIndexTest::testSignals_data()
                                                        {"label3", 2}
                                                    });
     QTest::newRow("remove all labels") << "label1 0\n"
-                                         "label2 0\n"
-                                         "label3 0" << "" <<
+                                          "label2 0\n"
+                                          "label3 0" <<
+                                          0 << 26 << " " <<
                                          ParamList() <<
                                          ParamList({
                                                        {"label1", 0},
@@ -128,10 +134,8 @@ void DocumentLabelIndexTest::testSignals_data()
     QTest::newRow("add label to empty line") << "label1 0\n"
                                                 "\n"
                                                 "label3 0" <<
-
-                                                "label1 0\n"
-                                                "label2 0\n"
-                                                "label3 0" <<
+                                                9 << 9 <<
+                                                "label2 0" <<
                                                 ParamList({
                                                               {"label2", 1}
                                                           }) <<
@@ -141,42 +145,37 @@ void DocumentLabelIndexTest::testSignals_data()
 void DocumentLabelIndexTest::testSignals()
 {
     QFETCH(QString, initialDocText);
-    QFETCH(QString, finalDocText);
+    QFETCH(int, cursorStart);
+    QFETCH(int, cursorEnd);
+    QFETCH(QString, insertedText);
     QFETCH(ParamList, expectedAdded);
     QFETCH(ParamList, expectedRemoved);
 
     QTextDocument doc(initialDocText);
+    QTextCursor cursor(&doc);
     DocumentLabelIndex index(&doc);
 
     QSignalSpy addedSpy(&index, SIGNAL(labelAdded(QString,int)));
     QSignalSpy removedSpy(&index, SIGNAL(labelRemoved(QString,int)));
 
-    doc.setPlainText(finalDocText);
+    cursor.setPosition(cursorStart);
+    if (cursorEnd != cursorStart) {
+        cursor.setPosition(cursorEnd, QTextCursor::KeepAnchor);
+    }
+    cursor.insertText(insertedText);
+
+    qDebug() << "new text:" << doc.toPlainText();
 
     QCOMPARE(addedSpy.count(), expectedAdded.size());
     QCOMPARE(removedSpy.count(), expectedRemoved.size());
 
-    QSignalSpy::iterator e = addedSpy.begin();
-    ParamList::iterator i = expectedAdded.begin();
-    for (; e != addedSpy.end(); ++e, ++i) {
-        QString expectedLabel = e->at(0).toString();
-        QString resultLabel = i->at(0).toString();
-        QCOMPARE(resultLabel, expectedLabel);
-
-        int expectedLine = e->at(1).toInt();
-        int resultLine = i->at(1).toInt();
-        QCOMPARE(resultLine, expectedLine);
+    ParamList::iterator e = expectedAdded.begin();
+    for (; e != expectedAdded.end(); ++e) {
+        QVERIFY(addedSpy.contains(*e));
     }
 
-    e = removedSpy.begin();
-    i = expectedRemoved.begin();
-    for (; e != addedSpy.end(); ++e, ++i) {
-        QString expectedLabel = e->at(0).toString();
-        QString resultLabel = i->at(0).toString();
-        QCOMPARE(resultLabel, expectedLabel);
-
-        int expectedLine = e->at(1).toInt();
-        int resultLine = i->at(1).toInt();
-        QCOMPARE(resultLine, expectedLine);
+    e = expectedRemoved.begin();
+    for (; e != expectedRemoved.end(); ++e) {
+        QVERIFY(removedSpy.contains(*e));
     }
 }

@@ -9,7 +9,8 @@
 DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
     mDoc(0),
     mCursorPos(0),
-    mReceivedLongDocumentChange(false)
+    mReceivedLongDocumentChange(false),
+    mPreviouslyWasEmpty(true)
 {
     setDocument(doc);
 }
@@ -160,15 +161,19 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
     addedTokens = newTokens.subtract(tokensThatStayed).toList();
     removedTokens = oldTokens.subtract(tokensThatStayed).toList();
 
-    if (removedTokens.size() > 0)
+    if (removedTokens.size() > 0) {
+        qDebug() << "Removed tokens:" << removedTokens;
         emit tokensRemoved(removedTokens, line);
-    else
+    } else {
         qDebug() << "None removed";
+    }
 
-    if (addedTokens.size() > 0)
+    if (addedTokens.size() > 0) {
+        qDebug() << "Added tokens:" << addedTokens;
         emit tokensAdded(addedTokens, line);
-    else
+    } else {
         qDebug() << "None added";
+    }
 }
 
 void DocumentTokenizer::reset()
@@ -180,6 +185,7 @@ void DocumentTokenizer::reset()
         emit tokensRemoved(tokens, line);
         line++;
     }
+    mPreviouslyWasEmpty = true;
 }
 
 void DocumentTokenizer::parse()
@@ -210,6 +216,7 @@ void DocumentTokenizer::parse(int beginPos, int endPos)
                 TokenList tokensInLine = parseLine(lines[line]);
                 setLine(tokensInLine, beginLine + line);
             }
+            mPreviouslyWasEmpty = false;
         } else if (beginPos == 0){
             reset();
         }
@@ -281,14 +288,7 @@ void DocumentTokenizer::onDocumentContentsChanged()
 {
     qDebug() << "Document contents changed";
     if (!mReceivedLongDocumentChange) {
-        int line = 0;
-        line = mCursor.block().firstLineNumber();
-        QString lineText = mCursor.block().text();
-
-        if (line >= 0) {
-            TokenList newTokensInLine = parseLine(lineText);
-            setLine(newTokensInLine, line);
-        }
+        parse();
     }
     mReceivedLongDocumentChange = false;
 }
@@ -333,8 +333,8 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
     if (difference > 0) {
         qDebug() << difference << "lines removed";
         int lineToRemove = getLineNumberOfPosition(cursorPos) + 1;
-        for (int i = 0; i < difference; ++i) {
-            removeLine(lineToRemove);
+        for (int i = lineToRemove + difference - 1; i >= lineToRemove; --i) {
+            removeLine(i);
         }
     }
 

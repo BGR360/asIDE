@@ -173,6 +173,23 @@ void DocumentTokenizerTest::testInsert_data()
                                      0 << 0 << "label" <<
                                      QVector<Token>({{"label", Token::Label}});
 
+    QTest::newRow("empty->labels") << "" <<
+                                      QVector<Token>() <<
+                                      0 << 0 <<
+                                      "label1 0\n"
+                                      "label2 0\n"
+                                      "label3 0" <<
+                                      QVector<Token>({
+                                                         {"label1", Token::Label},
+                                                         {"0", Token::IntLiteral},
+                                                         NEWLINE,
+                                                         {"label2", Token::Label},
+                                                         {"0", Token::IntLiteral},
+                                                         NEWLINE,
+                                                         {"label3", Token::Label},
+                                                         {"0", Token::IntLiteral}
+                                                     });
+
     QTest::newRow("label->newline") << "label" <<
                                        QVector<Token>({{"label", Token::Label}}) <<
                                        5 << 5 << "\nnew_label" <<
