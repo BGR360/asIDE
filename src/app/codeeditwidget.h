@@ -9,7 +9,7 @@ class QStringListModel;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
-#include <documenttokenizer.h>
+#include <documentlabelindex.h>
 
 namespace Ui {
 class CodeEditWidget;
@@ -20,7 +20,7 @@ class CodeEditWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit CodeEditWidget(QWidget *parent = 0);
+    explicit CodeEditWidget(QWidget* parent = 0);
     ~CodeEditWidget();
 
     QString fileExtension() const;
@@ -53,7 +53,7 @@ private:
     Ui::CodeEditWidget* ui;
 
     QSyntaxHighlighter* highlighter;
-    DocumentTokenizer* tokenizer;
+    DocumentLabelIndex* labelIndex;
     QString fileBeingEdited;
 
     QStringListModel* tokenModel;
@@ -65,7 +65,7 @@ private:
     bool maybeSave();
     bool saveFile(const QString& fileName);
     bool loadFile(const QString& fileName);
-    void updateTokenView();
+    void updateLabelView();
 };
 
 #endif // CODEEDITWIDGET_H

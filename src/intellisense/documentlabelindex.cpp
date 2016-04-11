@@ -115,11 +115,13 @@ void DocumentLabelIndex::readFromTokenizer()
 
 QString DocumentLabelIndex::readLabelsFromLine(const TokenList& tokensInLine)
 {
-    const Token& firstToken = tokensInLine.at(0);
-    if (firstToken.type == Token::Label) {
-        return firstToken.value;
-    } else {
-        return QString();
+    if (tokensInLine.size() > 0) {
+        const Token& firstToken = tokensInLine.at(0);
+        if (firstToken.type == Token::Label) {
+            return firstToken.value;
+        } else {
+            return QString();
+        }
     }
 }
 

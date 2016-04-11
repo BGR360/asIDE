@@ -16,7 +16,7 @@ CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::CodeEditWidget),
     highlighter(0),
-    tokenizer(0)
+    labelIndex(0)
 {
     ui->setupUi(this);
 
@@ -132,7 +132,7 @@ void CodeEditWidget::onTokensAdded(const TokenList& tokens, int lineNumber)
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
     }
-    updateTokenView();
+    updateLabelView();
 }
 
 void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
@@ -141,14 +141,14 @@ void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
     }
-    updateTokenView();
+    updateLabelView();
 }
 
 void CodeEditWidget::connectSignalsAndSlots()
 {
     connect(textEdit(), SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
-    connect(tokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
-    connect(tokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
+    connect(labelIndex->tokenizer(), SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
+    connect(labelIndex->tokenizer(), SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
 }
 
 void CodeEditWidget::setupTextEdit()
@@ -182,7 +182,7 @@ void CodeEditWidget::setupIntellisense()
 {
     QTextDocument* doc = textEdit()->document();
     highlighter = new SyntaxHighlighter(doc);
-    tokenizer = new DocumentTokenizer(doc);
+    labelIndex = new DocumentLabelIndex(doc);
 }
 
 bool CodeEditWidget::maybeSave()
@@ -268,12 +268,13 @@ bool CodeEditWidget::loadFile(const QString& fileName)
     return true;
 }
 
-void CodeEditWidget::updateTokenView()
+void CodeEditWidget::updateLabelView()
 {
-    QStringList tokenStrings;
-    TokenList allTokens = tokenizer->tokens();
-    foreach (const Token& token, allTokens) {
-        tokenStrings.push_back(QString("%1: %2").arg(Token::TYPE_NAMES[token.type]).arg(token.value));
+    QStringList labelStrings = labelIndex->labels();
+    QStringList newLabelStrings;
+    foreach (const QString& str, labelStrings) {
+        newLabelStrings.push_back(str + QString(": %1").arg(labelIndex->lineNumberOfLabel(str)));
     }
-    tokenModel->setStringList(tokenStrings);
+
+    tokenModel->setStringList(newLabelStrings);
 }

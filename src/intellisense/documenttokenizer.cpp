@@ -143,6 +143,7 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
     }
 
     // Set the tokens in that line to the TokenList passed in
+    qDebug() << "mTokensByLine[" << line << "] =" << mTokensByLine[line];
     QSet<Token> oldTokens = QSet<Token>::fromList(mTokensByLine[line]);
     mTokensByLine[line] = tokens;
 
@@ -344,8 +345,8 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
         difference *= -1;
         qDebug() << difference << "lines added";
         int lineToAdd = getLineNumberOfPosition(cursorPos);
-        for (int i = 0; i < difference; ++i) {
-            addLine(lineToAdd);
+        for (int i = lineToAdd; i < lineToAdd + difference; ++i) {
+            addLine(i);
         }
         parseLines(lineToAdd, lineToAdd + difference);
     }
