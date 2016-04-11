@@ -7,16 +7,20 @@
 
 #include "intellisense_global.h"
 
+#include "token.h"
+
 QT_BEGIN_NAMESPACE
 class QTextDocument;
 QT_END_NAMESPACE
+
+class DocumentLabelIndex;
 
 class INTELLISENSE_EXPORT SyntaxHighlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
 
 public:
-    SyntaxHighlighter(QTextDocument* parent = 0);
+    SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* labelIndex = 0);
 
 protected:
     void highlightBlock(const QString& text) Q_DECL_OVERRIDE;
@@ -29,8 +33,10 @@ private:
     };
     QVector<HighlightingRule> highlightingRules;
 
-    QTextCharFormat labelFormat;
+    QTextCharFormat functionLabelFormat;
+    QTextCharFormat variableLabelFormat;
     QRegExp labelExpression;
+    DocumentLabelIndex* labelIndex;
 
     QTextCharFormat keywordFormat;
     QTextCharFormat includeFormat;
@@ -38,6 +44,11 @@ private:
     QTextCharFormat singleLineCommentFormat;
     QTextCharFormat quotationFormat;
     QTextCharFormat numberFormat;
+
+    bool isValidLabel(const QString& label) const;
+    Token getStuffAfterLabel(const QString& label) const;
+    bool isFunctionLabel(const QString& label) const;
+    bool isVariableLabel(const QString& label) const;
 };
 
 #endif // SYNTAXHIGHLIGHTER_H

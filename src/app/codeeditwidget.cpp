@@ -181,8 +181,8 @@ void CodeEditWidget::setupTextEdit()
 void CodeEditWidget::setupIntellisense()
 {
     QTextDocument* doc = textEdit()->document();
-    highlighter = new SyntaxHighlighter(doc);
     labelIndex = new DocumentLabelIndex(doc);
+    highlighter = new SyntaxHighlighter(doc, labelIndex);
 }
 
 bool CodeEditWidget::maybeSave()
@@ -257,6 +257,7 @@ bool CodeEditWidget::loadFile(const QString& fileName)
 
         QTextStream in(&file);
         textEdit()->setPlainText(in.readAll());
+        highlighter->rehighlight();
 
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
