@@ -1,20 +1,39 @@
 #include "documentlabelindex.h"
 
+#include "documenttokenizer.h"
+
 DocumentLabelIndex::DocumentLabelIndex(QTextDocument* doc) :
-    mDoc(0)
+    mTokenizer(0)
 {
     setDocument(doc);
 }
 
+DocumentLabelIndex::~DocumentLabelIndex()
+{
+    if (mTokenizer)
+        delete mTokenizer;
+}
+
 QTextDocument* DocumentLabelIndex::document()
 {
-    return mDoc;
+    if (mTokenizer)
+        return mTokenizer->document();
+    else
+        return NULL;
 }
 
 void DocumentLabelIndex::setDocument(QTextDocument* doc)
 {
-    mDoc = doc;
+    if (mTokenizer)
+        delete mTokenizer;
+
+    mTokenizer = new DocumentTokenizer(doc);
     emit documentChanged(doc);
+}
+
+DocumentTokenizer* DocumentLabelIndex::tokenizer()
+{
+    return mTokenizer;
 }
 
 bool DocumentLabelIndex::hasLabel(const QString& label) const
@@ -27,12 +46,14 @@ int DocumentLabelIndex::lineNumberOfLabel(const QString& label) const
     return 0;
 }
 
-QVector<QString> DocumentLabelIndex::labels() const
+QList<QString> DocumentLabelIndex::labels() const
 {
-    return QVector<QString>();
+    return QList<QString>();
 }
 
-QVector<QString> DocumentLabelIndex::labelsInLine(int lineNumber) const
+void DocumentLabelIndex::reset()
 {
-    return QVector<QString>();
+    mLabels.clear();
+    mLabelsByLine.clear();
+    mLinesByLabel.clear();
 }

@@ -10,11 +10,13 @@ CONFIG += console
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    documenttokenizertest.cpp
+    documenttokenizertest.cpp \
+    documentlabelindextest.cpp
 
 LIBS += -L../intellisense -lIntellisense
 
 INCLUDEPATH += ../intellisense
 
 HEADERS += \
-    documenttokenizertest.h
+    documenttokenizertest.h \
+    documentlabelindextest.h

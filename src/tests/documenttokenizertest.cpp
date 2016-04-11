@@ -328,4 +328,4 @@ void DocumentTokenizerTest::testCursorMove()
     delete cursor;
 }
 
-QTEST_MAIN(DocumentTokenizerTest)
+//QTEST_MAIN(DocumentTokenizerTest)
