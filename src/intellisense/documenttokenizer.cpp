@@ -34,7 +34,7 @@ void DocumentTokenizer::setDocument(QTextDocument* doc)
     mDoc = doc;
     mCursorPos = 0;
 
-    // Connect signals and slots to new documents
+    // Connect signals and slots to new document
     if (mDoc) {
         connect(mDoc, SIGNAL(contentsChanged()), this, SLOT(onDocumentContentsChanged()));
         connect(mDoc, SIGNAL(contentsChange(int, int, int)), this,
