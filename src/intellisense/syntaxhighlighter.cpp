@@ -26,17 +26,26 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
     highlightingRules.append(rule);
 
     // Create a highlighting rule for E100 labels that are variables
-    variableLabelFormat.setFontItalic(true);
+    variableLabelFormat.setFontItalic(false);
     rule.pattern = labelExpression;
     rule.format = variableLabelFormat;
-    highlightingRules.append(rule);
+    //highlightingRules.append(rule);
 
-    // Create highlighting rules for all the keywords (instructions)
+    // Create a highlighting rule for bad or erroneous E100 labels
+    badLabelFormat.setFontUnderline(true);
+    badLabelFormat.setUnderlineColor(Qt::red);
+    badLabelFormat.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+    rule.pattern = labelExpression;
+    rule.format = badLabelFormat;
+    //highlightingRules.append(rule);
+
+    // Create a highlighting rule for all the keywords (instructions)
     keywordFormat.setForeground(Qt::darkBlue);
     keywordFormat.setFontWeight(QFont::Bold);
     rule.pattern = QRegExp(QString("\\b(%1)\\b").arg(Token::REGEX[Token::Instruction].pattern()));
     rule.format = keywordFormat;
     highlightingRules.append(rule);
+
 
     // Create a highlighting rule for single-quoted characters
     quotationFormat.setForeground(Qt::darkYellow);
@@ -75,10 +84,12 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
 
             if (expression == labelExpression) {
                 QString matchedLabel = text.mid(index, length);
-                if (rule.format == functionLabelFormat && isFunctionLabel(matchedLabel))
-                    setFormat(index, length, rule.format);
-                if (rule.format == variableLabelFormat && isVariableLabel(matchedLabel))
-                    setFormat(index, length, rule.format);
+                if (isFunctionLabel(matchedLabel))
+                    setFormat(index, length, functionLabelFormat);
+                else if (isVariableLabel(matchedLabel))
+                    setFormat(index, length, variableLabelFormat);
+                //else
+                    //setFormat(index, length, badLabelFormat);
             } else {
                 setFormat(index, length, rule.format);
             }
@@ -126,7 +137,7 @@ bool SyntaxHighlighter::isVariableLabel(const QString& label) const
         return false;
     Token stuffAfterLabel = getStuffAfterLabel(label);
     return stuffAfterLabel.type == Token::IntLiteral
-            || stuffAfterLabel.type == Token::CharLiteral;
-            //|| (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
+            || stuffAfterLabel.type == Token::CharLiteral
+            || (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
 }
 

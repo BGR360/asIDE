@@ -35,6 +35,7 @@ private:
 
     QTextCharFormat functionLabelFormat;
     QTextCharFormat variableLabelFormat;
+    QTextCharFormat badLabelFormat;
     QRegExp labelExpression;
     DocumentLabelIndex* labelIndex;
 

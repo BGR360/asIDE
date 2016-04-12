@@ -20,9 +20,6 @@ CodeEditWidget::CodeEditWidget(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    tokenModel = new QStringListModel();
-    ui->listView->setModel(tokenModel);
-
     setupTextEdit();
     setupIntellisense();
     connectSignalsAndSlots();
@@ -132,7 +129,6 @@ void CodeEditWidget::onTokensAdded(const TokenList& tokens, int lineNumber)
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
     }
-    updateLabelView();
 }
 
 void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
@@ -141,7 +137,6 @@ void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
     }
-    updateLabelView();
 }
 
 void CodeEditWidget::connectSignalsAndSlots()
@@ -267,15 +262,4 @@ bool CodeEditWidget::loadFile(const QString& fileName)
     fileBeingEdited = fileName;
 
     return true;
-}
-
-void CodeEditWidget::updateLabelView()
-{
-    QStringList labelStrings = labelIndex->labels();
-    QStringList newLabelStrings;
-    foreach (const QString& str, labelStrings) {
-        newLabelStrings.push_back(str + QString(": %1").arg(labelIndex->lineNumberOfLabel(str)));
-    }
-
-    tokenModel->setStringList(newLabelStrings);
 }

@@ -5,7 +5,6 @@
 
 QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
-class QStringListModel;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
 
@@ -56,8 +55,6 @@ private:
     DocumentLabelIndex* labelIndex;
     QString fileBeingEdited;
 
-    QStringListModel* tokenModel;
-
     void connectSignalsAndSlots();
     void setupTextEdit();
     void setupIntellisense();
@@ -65,7 +62,6 @@ private:
     bool maybeSave();
     bool saveFile(const QString& fileName);
     bool loadFile(const QString& fileName);
-    void updateLabelView();
 };
 
 #endif // CODEEDITWIDGET_H

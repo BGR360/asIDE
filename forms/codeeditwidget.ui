@@ -29,9 +29,6 @@
    <item>
     <widget class="QPlainTextEdit" name="textEdit"/>
    </item>
-   <item>
-    <widget class="QListView" name="listView"/>
-   </item>
   </layout>
  </widget>
  <resources/>
