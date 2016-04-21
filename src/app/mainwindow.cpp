@@ -17,6 +17,7 @@
 #include "aseconfigdialog.h"
 #include "codeeditwidget.h"
 #include "labelviewdialog.h"
+#include "instructionviewdialog.h"
 #include "tokenviewdialog.h"
 
 MainWindow::MainWindow(QWidget* parent) :
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget* parent) :
     ui(new Ui::MainWindow),
     currentEditor(0),
     labelViewDialog(new LabelViewDialog(this)),
+    instructionViewDialog(new InstructionViewDialog(this)),
     tokenViewDialog(new TokenViewDialog(this))
 {
     ui->setupUi(this);
@@ -289,7 +291,7 @@ void MainWindow::viewTokens()
 
 void MainWindow::viewInstructions()
 {
-
+    instructionViewDialog->show();
 }
 
 void MainWindow::onModifyCurrentFile()

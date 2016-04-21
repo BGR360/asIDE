@@ -5,6 +5,7 @@
 
 class CodeEditWidget;
 class LabelViewDialog;
+class InstructionViewDialog;
 class TokenViewDialog;
 
 namespace Ui {
@@ -52,6 +53,7 @@ private:
 
     CodeEditWidget* currentEditor;
     LabelViewDialog* labelViewDialog;
+    InstructionViewDialog* instructionViewDialog;
     TokenViewDialog* tokenViewDialog;
 
     QString currentFile;

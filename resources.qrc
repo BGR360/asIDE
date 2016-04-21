@@ -10,5 +10,6 @@
         <file>images/filesave.png</file>
         <file>images/qt-logo.png</file>
         <file>images/assemble.png</file>
+        <file>html/e100-instructions.html</file>
     </qresource>
 </RCC>

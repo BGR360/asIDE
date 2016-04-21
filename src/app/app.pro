@@ -13,19 +13,22 @@ SOURCES += main.cpp \
     aseconfigdialog.cpp \
     codeeditwidget.cpp \
     labelviewdialog.cpp \
-    tokenviewdialog.cpp
+    tokenviewdialog.cpp \
+    instructionviewdialog.cpp
 
 HEADERS  += mainwindow.h \
     aseconfigdialog.h \
     codeeditwidget.h \
     labelviewdialog.h \
-    tokenviewdialog.h
+    tokenviewdialog.h \
+    instructionviewdialog.h
 
 FORMS    = ../../forms/mainwindow.ui \
     ../../forms/aseconfigdialog.ui \
     ../../forms/codeeditwidget.ui \
     ../../forms/labelviewdialog.ui \
-    ../../forms/tokenviewdialog.ui
+    ../../forms/tokenviewdialog.ui \
+    ../../forms/instructionviewdialog.ui
 
 RESOURCES += ../../resources.qrc
 

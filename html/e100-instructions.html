@@ -1,0 +1,122 @@
+<!-- Taken from Professor Chen's E100 website -->
+
+<table border=1 align=center>
+    <tbody>
+        <tr align=center>
+	    <th>Instruction name</th>
+	    <th>Opcode</th>
+	    <th>Effect</th>
+	</tr>
+        <tr align=center>
+	    <td>halt</td>
+	    <td>0</td>
+	    <td align=left><tt>IAR = IAR+4<br>stop executing instructions</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>add</td>
+	    <td>1</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] + memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>sub</td>
+	    <td>2</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] - memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>mult</td>
+	    <td>3</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] * memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>div</td>
+	    <td>4</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] / memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>cp</td>
+	    <td>5</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>and</td>
+	    <td>6</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] & memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>or</td>
+	    <td>7</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] | memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>not</td>
+	    <td>8</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = ~memory[arg2]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>sl</td>
+	    <td>9</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] &#60;&#60; memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>sr</td>
+	    <td>10</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2] >> memory[arg3]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>cpfa</td>
+	    <td>11</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg1] = memory[arg2 + memory[arg3]]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>cpta</td>
+	    <td>12</td>
+	    <td align=left><tt>IAR = IAR+4<br>memory[arg2 + memory[arg3]] = memory[arg1]</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>be</td>
+	    <td>13</td>
+	    <td align=left>
+	    <pre>
+if (memory[arg2] == memory[arg3]) {
+    IAR = arg1
+} else {
+    IAR = IAR+4
+} </pre>
+	    </td>
+	</tr>
+        <tr align=center>
+	    <td>bne</td>
+	    <td>14</td>
+	    <td align=left>
+	    <pre>
+if (memory[arg2] != memory[arg3]) {
+    IAR = arg1
+} else {
+    IAR = IAR+4
+} </pre>
+	    </td>
+	</tr>
+        <tr align=center>
+	    <td>blt</td>
+	    <td>15</td>
+	    <td align=left>
+	    <pre>
+if (memory[arg2] &#60; memory[arg3]) {
+    IAR = arg1
+} else {
+    IAR = IAR+4
+} </pre>
+	    </td>
+	</tr>
+        <tr align=center>
+	    <td>call</td>
+	    <td>16</td>
+	    <td align=left><tt>memory[arg2] = IAR+4<br>IAR = arg1</tt></td>
+	</tr>
+        <tr align=center>
+	    <td>ret</td>
+	    <td>17</td>
+	    <td align=left><tt>IAR = memory[arg1]</tt></td>
+	</tr>
+    </tbody>
+</table>
