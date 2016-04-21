@@ -26,7 +26,9 @@ public:
     QString fileName() const;
     QString fileNameWithoutExtension() const;
     QString fullFileName() const;
+
     QPlainTextEdit* textEdit();
+    DocumentLabelIndex* labelIndex();
 
     void setFileName(const QString& fullFileName);
 
@@ -52,7 +54,7 @@ private:
     Ui::CodeEditWidget* ui;
 
     QSyntaxHighlighter* highlighter;
-    DocumentLabelIndex* labelIndex;
+    DocumentLabelIndex* labelIndexer;
     QString fileBeingEdited;
 
     void connectSignalsAndSlots();

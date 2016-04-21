@@ -63,7 +63,7 @@
      <x>0</x>
      <y>0</y>
      <width>551</width>
-     <height>31</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuWidgeted_Editor">
@@ -106,9 +106,19 @@
     <addaction name="actionViewLabels"/>
     <addaction name="actionViewMif"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionViewTokens"/>
+    <addaction name="actionViewLabelIndex"/>
+    <addaction name="separator"/>
+    <addaction name="actionViewInstructions"/>
+   </widget>
    <addaction name="menuWidgeted_Editor"/>
    <addaction name="menuEdit"/>
    <addaction name="menuRun"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -321,6 +331,30 @@
    </property>
    <property name="toolTip">
     <string>View the compiled MIF File (.mif)</string>
+   </property>
+  </action>
+  <action name="actionViewTokens">
+   <property name="text">
+    <string>View Tokens in File</string>
+   </property>
+   <property name="toolTip">
+    <string>View all of the tokens in this file</string>
+   </property>
+  </action>
+  <action name="actionViewLabelIndex">
+   <property name="text">
+    <string>View Labels in File</string>
+   </property>
+   <property name="toolTip">
+    <string>View all of the labels in this file</string>
+   </property>
+  </action>
+  <action name="actionViewInstructions">
+   <property name="text">
+    <string>E100 Instructions</string>
+   </property>
+   <property name="toolTip">
+    <string>See a chart of all the E100 Instructions</string>
    </property>
   </action>
  </widget>

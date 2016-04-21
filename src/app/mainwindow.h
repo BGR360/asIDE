@@ -4,6 +4,8 @@
 #include <QMainWindow>
 
 class CodeEditWidget;
+class LabelViewDialog;
+class TokenViewDialog;
 
 namespace Ui {
 class MainWindow;
@@ -28,21 +30,29 @@ private slots:
     void open();
     bool save();
     bool saveAs();
+
     bool closeTab(int index);
     bool closeActiveTab();
     void switchToTab(int index);
     void onTabSwitched(int index);
     void setEditor(CodeEditWidget* codeEdit);
+
     bool assemble();
     void configureAse();
     bool viewLabels();
     bool viewMif();
+    void viewLabelIndex();
+    void viewTokens();
+    void viewInstructions();
+
     void onModifyCurrentFile();
 
 private:
     Ui::MainWindow* ui;
 
-    CodeEditWidget* editor;
+    CodeEditWidget* currentEditor;
+    LabelViewDialog* labelViewDialog;
+    TokenViewDialog* tokenViewDialog;
 
     QString currentFile;
     QString pathToAse100;

@@ -124,6 +124,7 @@ QString DocumentLabelIndex::readLabelsFromLine(const TokenList& tokensInLine)
             return QString();
         }
     }
+    return QString();
 }
 
 void DocumentLabelIndex::addLabel(const QString& label, int line)

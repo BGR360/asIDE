@@ -16,11 +16,15 @@
 
 #include "aseconfigdialog.h"
 #include "codeeditwidget.h"
+#include "labelviewdialog.h"
+#include "tokenviewdialog.h"
 
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    editor(0)
+    currentEditor(0),
+    labelViewDialog(new LabelViewDialog(this)),
+    tokenViewDialog(new TokenViewDialog(this))
 {
     ui->setupUi(this);
 
@@ -33,6 +37,7 @@ MainWindow::MainWindow(QWidget* parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete labelViewDialog;
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -78,7 +83,7 @@ void MainWindow::open()
 
 bool MainWindow::save()
 {
-    if (editor->save()) {
+    if (currentEditor->save()) {
         updateCurrentFile();
         statusBar()->showMessage(tr("File saved"), 2000);
         return true;
@@ -88,7 +93,7 @@ bool MainWindow::save()
 
 bool MainWindow::saveAs()
 {
-    if (editor->saveAs()) {
+    if (currentEditor->saveAs()) {
         updateCurrentFile();
         statusBar()->showMessage(tr("File saved"), 2000);
         return true;
@@ -105,7 +110,7 @@ bool MainWindow::closeTab(int index)
 
         // If all tabs have been closed, set editor to null and reset the window title
         if (ui->tabWidget->count() == 0) {
-            editor = NULL;
+            currentEditor = NULL;
             updateCurrentFile();
         }
 
@@ -135,7 +140,7 @@ void MainWindow::onTabSwitched(int index)
     updateCurrentFile();
 
     // Check to see if the "View Labels" and "View MIF" options are available for this file
-    QString fileExtension = editor->fileExtension();
+    QString fileExtension = currentEditor->fileExtension();
     if (fileExtension == "e") {
         ui->actionViewLabels->setEnabled(true);
         ui->actionViewMif->setEnabled(true);
@@ -149,12 +154,12 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
 {
     if (codeEdit) {
 
-        if (codeEdit == editor)
+        if (codeEdit == currentEditor)
             return;
 
         // Disconnect signals and slots from the previous editor
-        if (editor) {
-            QPlainTextEdit* textEdit = editor->textEdit();
+        if (currentEditor) {
+            QPlainTextEdit* textEdit = currentEditor->textEdit();
             disconnect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
             disconnect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
             disconnect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
@@ -163,10 +168,12 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
             disconnect(textEdit, SIGNAL(textChanged()), this, SLOT(onModifyCurrentFile()));
         }
 
-        editor = codeEdit;
+        currentEditor = codeEdit;
+        labelViewDialog->setEditor(currentEditor);
+        tokenViewDialog->setEditor(currentEditor);
 
         // Hook up the necessary signals and slots for the code editor
-        QPlainTextEdit* textEdit = editor->textEdit();
+        QPlainTextEdit* textEdit = currentEditor->textEdit();
         connect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
         connect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
         connect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
@@ -241,7 +248,7 @@ void MainWindow::configureAse()
 bool MainWindow::viewLabels()
 {
     statusBar()->showMessage(tr("Attempting to open Labels file..."));
-    QString labelsPath = editor->fileNameWithoutExtension().append(".labels");
+    QString labelsPath = currentEditor->fileNameWithoutExtension().append(".labels");
     bool exists = QFileInfo(labelsPath).exists();
     if (!exists) {
         if (!assemble() || !QFileInfo(labelsPath).exists()) {
@@ -257,7 +264,7 @@ bool MainWindow::viewLabels()
 bool MainWindow::viewMif()
 {
     statusBar()->showMessage(tr("Attempting to open MIF file..."));
-    QString mifPath = editor->fileNameWithoutExtension().append(".mif");
+    QString mifPath = currentEditor->fileNameWithoutExtension().append(".mif");
     bool exists = QFileInfo(mifPath).exists();
     if (!exists) {
         if (!assemble() || !QFileInfo(mifPath).exists()) {
@@ -268,6 +275,21 @@ bool MainWindow::viewMif()
 
     loadFile(mifPath);
     return true;
+}
+
+void MainWindow::viewLabelIndex()
+{
+    labelViewDialog->show();
+}
+
+void MainWindow::viewTokens()
+{
+    tokenViewDialog->show();
+}
+
+void MainWindow::viewInstructions()
+{
+
 }
 
 void MainWindow::onModifyCurrentFile()
@@ -284,10 +306,15 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionSaveAs, SIGNAL(triggered(bool)), this, SLOT(saveAs()));
     connect(ui->actionCloseFile, SIGNAL(triggered(bool)), this, SLOT(closeActiveTab()));
     connect(ui->actionQuit, SIGNAL(triggered(bool)), QApplication::instance(), SLOT(quit()));
+
     connect(ui->actionAssemble, SIGNAL(triggered(bool)), this, SLOT(assemble()));
     connect(ui->actionConfigureAse, SIGNAL(triggered(bool)), this, SLOT(configureAse()));
     connect(ui->actionViewLabels, SIGNAL(triggered(bool)), this, SLOT(viewLabels()));
     connect(ui->actionViewMif, SIGNAL(triggered(bool)), this, SLOT(viewMif()));
+
+    connect(ui->actionViewLabelIndex, SIGNAL(triggered(bool)), this, SLOT(viewLabelIndex()));
+    connect(ui->actionViewTokens, SIGNAL(triggered(bool)), this, SLOT(viewTokens()));
+    connect(ui->actionViewInstructions, SIGNAL(triggered(bool)), this, SLOT(viewInstructions()));
 
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabSwitched(int)));
@@ -358,15 +385,15 @@ void MainWindow::writeSettings()
 
 void MainWindow::updateCurrentFile()
 {
-    currentFile = (editor) ? editor->fullFileName() : QString();
+    currentFile = (currentEditor) ? currentEditor->fullFileName() : QString();
     setWindowModified(false);
 
     QString shownName = currentFile;
     setWindowFilePath(shownName);
 
-    QString stripped = (editor) ? editor->fileName() : QString();
+    QString stripped = (currentEditor) ? currentEditor->fileName() : QString();
     if (!stripped.isEmpty()) {
-        if (editor->textEdit()->document()->isModified()) {
+        if (currentEditor->textEdit()->document()->isModified()) {
             stripped += "*";
             setWindowModified(true);
         }
@@ -383,8 +410,8 @@ void MainWindow::loadFile(const QString& fileName)
 
     // If all we have open is an untitled file, use the current tab
     // Otherwise, open a new one
-    if (ui->tabWidget->count() == 1 && editor->textEdit()->document()->isEmpty())
-        codeEdit = editor;
+    if (ui->tabWidget->count() == 1 && currentEditor->textEdit()->document()->isEmpty())
+        codeEdit = currentEditor;
     else
         codeEdit = new CodeEditWidget();
 
@@ -396,7 +423,7 @@ void MainWindow::loadFile(const QString& fileName)
 
         setEditor(codeEdit);
 
-        const int index = ui->tabWidget->addTab(editor, editor->fileName());
+        const int index = ui->tabWidget->addTab(currentEditor, currentEditor->fileName());
         switchToTab(index);
     } else {
         delete codeEdit;

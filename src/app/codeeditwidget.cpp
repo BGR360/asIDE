@@ -16,7 +16,7 @@ CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::CodeEditWidget),
     highlighter(0),
-    labelIndex(0)
+    labelIndexer(0)
 {
     ui->setupUi(this);
 
@@ -60,6 +60,11 @@ QString CodeEditWidget::fullFileName() const
 QPlainTextEdit* CodeEditWidget::textEdit()
 {
     return ui->textEdit;
+}
+
+DocumentLabelIndex* CodeEditWidget::labelIndex()
+{
+    return labelIndexer;
 }
 
 void CodeEditWidget::setFileName(const QString& fullFileName)
@@ -142,8 +147,8 @@ void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
 void CodeEditWidget::connectSignalsAndSlots()
 {
     connect(textEdit(), SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
-    connect(labelIndex->tokenizer(), SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
-    connect(labelIndex->tokenizer(), SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
+    connect(labelIndexer->tokenizer(), SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
+    connect(labelIndexer->tokenizer(), SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
 }
 
 void CodeEditWidget::setupTextEdit()
@@ -176,8 +181,8 @@ void CodeEditWidget::setupTextEdit()
 void CodeEditWidget::setupIntellisense()
 {
     QTextDocument* doc = textEdit()->document();
-    labelIndex = new DocumentLabelIndex(doc);
-    highlighter = new SyntaxHighlighter(doc, labelIndex);
+    labelIndexer = new DocumentLabelIndex(doc);
+    highlighter = new SyntaxHighlighter(doc, labelIndexer);
 }
 
 bool CodeEditWidget::maybeSave()
