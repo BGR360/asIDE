@@ -110,7 +110,7 @@ bool SyntaxHighlighter::isValidLabel(const QString& label) const
 
 Token SyntaxHighlighter::getStuffAfterLabel(const QString& label) const
 {
-    Token defaultToken = {"", Token::Unrecognized};
+    Token defaultToken = {QString(), Token::Unrecognized};
 
     if (!isValidLabel(label))
         return defaultToken;
@@ -137,7 +137,7 @@ bool SyntaxHighlighter::isVariableLabel(const QString& label) const
         return false;
     Token stuffAfterLabel = getStuffAfterLabel(label);
     return stuffAfterLabel.type == Token::IntLiteral
-            || stuffAfterLabel.type == Token::CharLiteral
-            || (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
+            || stuffAfterLabel.type == Token::CharLiteral;
+            //|| (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
 }
 

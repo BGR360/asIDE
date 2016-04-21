@@ -9,8 +9,7 @@
 DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
     mDoc(0),
     mCursorPos(0),
-    mReceivedLongDocumentChange(false),
-    mPreviouslyWasEmpty(true)
+    mReceivedLongDocumentChange(false)
 {
     setDocument(doc);
 }
@@ -85,28 +84,23 @@ int DocumentTokenizer::numLines() const
 
 void DocumentTokenizer::addLine(int afterLine)
 {
-    if (afterLine < 0) afterLine = 0;
+    qDebug() << "adding line after line" << afterLine;
+    bool isAddingLineToEndOfDoc = afterLine == numLines() - 1;
 
-    TokenLineMap::iterator where = mTokensByLine.begin() + afterLine;
-    if (where == mTokensByLine.end()) {
-        mTokensByLine.push_back(TokenList());
-        return;
-    }
+    TokenLineMap::iterator whereToInsertLine = mTokensByLine.begin() + afterLine + 1;
+    mTokensByLine.insert(whereToInsertLine, TokenList());
 
-    // Add a newline token to the previous last line (if there is one)
+    // If the new line that we added was added to the end of the document, add
+    // a newline token to the second to last line.
+    // Otherwise add a newline token to the newly added line
     Token newline = {"\n", Token::Newline};
-    where->push_back(newline);
-
-    TokenList added;
-    added.push_back(newline);
-    emit tokensAdded(added, numLines() - 1);
-
-    // Add a new line of tokens
-    where = where + 1;
-    if (where == mTokensByLine.end())
-        mTokensByLine.push_back(TokenList());
-    else
-        mTokensByLine.insert(where, TokenList());
+    TokenList added = {newline};
+    const int whereToAddNewlineToken = (isAddingLineToEndOfDoc) ? afterLine : afterLine + 1;
+    if (whereToAddNewlineToken >= 0) {
+        mTokensByLine[whereToAddNewlineToken].push_back(newline);
+        emit tokensAdded(added, whereToAddNewlineToken);
+    }
+    qDebug() << mTokensByLine;
 }
 
 void DocumentTokenizer::removeLine(int lineNumber)
@@ -143,7 +137,6 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
     }
 
     // Set the tokens in that line to the TokenList passed in
-    qDebug() << "mTokensByLine[" << line << "] =" << mTokensByLine[line];
     QSet<Token> oldTokens = QSet<Token>::fromList(mTokensByLine[line]);
     mTokensByLine[line] = tokens;
 
@@ -186,7 +179,6 @@ void DocumentTokenizer::reset()
         emit tokensRemoved(tokens, line);
         line++;
     }
-    mPreviouslyWasEmpty = true;
 }
 
 void DocumentTokenizer::parse()
@@ -217,7 +209,6 @@ void DocumentTokenizer::parse(int beginPos, int endPos)
                 TokenList tokensInLine = parseLine(lines[line]);
                 setLine(tokensInLine, beginLine + line);
             }
-            mPreviouslyWasEmpty = false;
         } else if (beginPos == 0){
             reset();
         }
@@ -257,6 +248,7 @@ TokenList DocumentTokenizer::parseLine(const QString& line)
     {
         // If not a comment, split the line into words and parse each word
         QStringList words = line.split(Token::REGEX[Token::Whitespace], QString::SkipEmptyParts);
+        qDebug() << "Split line into words: " << words;
         foreach (const QString& word, words) {
             tokensInLine.push_back(parseWord(word));
         }
@@ -344,7 +336,7 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
     if (difference < 0) {
         difference *= -1;
         qDebug() << difference << "lines added";
-        int lineToAdd = getLineNumberOfPosition(cursorPos);
+        int lineToAdd = getLineNumberOfPosition(cursorPos) - 1;
         for (int i = lineToAdd; i < lineToAdd + difference; ++i) {
             addLine(i);
         }

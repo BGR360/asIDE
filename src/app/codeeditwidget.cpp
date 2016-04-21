@@ -107,7 +107,7 @@ void CodeEditWidget::autoIndent()
 
     // Auto-indent if we just started a new line
     if (cursor.atBlockStart()) {
-        int previousLineNumber = cursor.block().firstLineNumber() - 1;
+        int previousLineNumber = cursor.block().blockNumber() - 1;
         QTextBlock previousBlock = doc->findBlockByNumber(previousLineNumber);
         QString previousLine = previousBlock.text();
 

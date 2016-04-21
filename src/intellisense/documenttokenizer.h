@@ -59,7 +59,6 @@ private:
     QTextCursor mCursor;
     int mCursorPos;
     bool mReceivedLongDocumentChange;
-    bool mPreviouslyWasEmpty;
 
     TokenList mTokens;
     TokenLineMap mTokensByLine;
