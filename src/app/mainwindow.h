@@ -45,6 +45,7 @@ private slots:
     void viewLabelIndex();
     void viewTokens();
     void viewInstructions();
+    void reportBug();
 
     void onModifyCurrentFile();
 

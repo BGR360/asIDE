@@ -94,6 +94,8 @@
      <string>Help</string>
     </property>
     <addaction name="actionInfo"/>
+    <addaction name="separator"/>
+    <addaction name="actionReportBug"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -355,6 +357,14 @@
    </property>
    <property name="toolTip">
     <string>See a chart of all the E100 Instructions</string>
+   </property>
+  </action>
+  <action name="actionReportBug">
+   <property name="text">
+    <string>Report a Bug!</string>
+   </property>
+   <property name="toolTip">
+    <string>Tell me about bugs so I can squish them!</string>
    </property>
   </action>
  </widget>

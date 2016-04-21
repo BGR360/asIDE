@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QFile>
 #include <QFileDialog>
@@ -19,6 +20,8 @@
 #include "labelviewdialog.h"
 #include "instructionviewdialog.h"
 #include "tokenviewdialog.h"
+
+static const QUrl BUG_REPORTING_URL("https://github.com/bgr360/asIDE/issues");
 
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
@@ -294,6 +297,11 @@ void MainWindow::viewInstructions()
     instructionViewDialog->show();
 }
 
+void MainWindow::reportBug()
+{
+    QDesktopServices::openUrl(BUG_REPORTING_URL);
+}
+
 void MainWindow::onModifyCurrentFile()
 {
     updateCurrentFile();
@@ -317,6 +325,7 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionViewLabelIndex, SIGNAL(triggered(bool)), this, SLOT(viewLabelIndex()));
     connect(ui->actionViewTokens, SIGNAL(triggered(bool)), this, SLOT(viewTokens()));
     connect(ui->actionViewInstructions, SIGNAL(triggered(bool)), this, SLOT(viewInstructions()));
+    connect(ui->actionReportBug, SIGNAL(triggered(bool)), this, SLOT(reportBug()));
 
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabSwitched(int)));
