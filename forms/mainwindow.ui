@@ -93,7 +93,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionInfo"/>
+    <addaction name="actionAbout"/>
     <addaction name="separator"/>
     <addaction name="actionReportBug"/>
    </widget>
@@ -277,13 +277,16 @@
     <string>Ctrl+V</string>
    </property>
   </action>
-  <action name="actionInfo">
+  <action name="actionAbout">
    <property name="icon">
-    <iconset theme="help-about">
+    <iconset>
      <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>Info...</string>
+    <string>About asIDE</string>
+   </property>
+   <property name="toolTip">
+    <string>About asIDE</string>
    </property>
   </action>
   <action name="actionAssemble">

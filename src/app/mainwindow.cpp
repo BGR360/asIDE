@@ -1,3 +1,25 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                          //
+//  The MIT License (MIT)                                                                                   //
+//  Copyright (c) 2016 Benjamin Reeves                                                                      //
+//                                                                                                          //
+//  Permission is hereby granted, free of charge, to any person obtaining a copy of this software           //
+//  and associated documentation files (the "Software"), to deal in the Software without restriction,       //
+//  including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,   //
+//  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,   //
+//  subject to the following conditions:                                                                    //
+//                                                                                                          //
+//  The above copyright notice and this permission notice shall be included in all copies or substantial    //
+//  portions of the Software.                                                                               //
+//                                                                                                          //
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT   //
+//  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.     //
+//  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, //
+//  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     //
+//  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                                  //
+//                                                                                                          //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -325,6 +347,18 @@ void MainWindow::viewInstructions()
     instructionViewDialog->show();
 }
 
+void MainWindow::about()
+{
+    QFile aboutHtml(":/html/about.html");
+    QString aboutHtmlString = "Developed by: Ben Reeves<br/>"
+                              "<p>Copyright (c) 2016 Benjamin Reeves</p>";
+    if (aboutHtml.open(QIODevice::ReadOnly | QIODevice::Text))
+        aboutHtmlString = aboutHtml.readAll();
+    else
+        qDebug() << "Could not open about.html";
+    QMessageBox::about(this, tr("About ase100"), aboutHtmlString);
+}
+
 void MainWindow::reportBug()
 {
     QDesktopServices::openUrl(BUG_REPORTING_URL);
@@ -354,6 +388,8 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionViewLabelIndex, SIGNAL(triggered(bool)), this, SLOT(viewLabelIndex()));
     connect(ui->actionViewTokens, SIGNAL(triggered(bool)), this, SLOT(viewTokens()));
     connect(ui->actionViewInstructions, SIGNAL(triggered(bool)), this, SLOT(viewInstructions()));
+
+    connect(ui->actionAbout, SIGNAL(triggered(bool)), this, SLOT(about()));
     connect(ui->actionReportBug, SIGNAL(triggered(bool)), this, SLOT(reportBug()));
 
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
