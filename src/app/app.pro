@@ -29,7 +29,7 @@ TEMPLATE = app
 
 CONFIG += c++11
 
-ICON = ../../images/app-icon/iconset.icns
+ICON = ../../images/app-icon/app.icns
 
 SOURCES += main.cpp \
     mainwindow.cpp \
