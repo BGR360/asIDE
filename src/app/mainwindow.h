@@ -39,6 +39,7 @@ private slots:
     void setEditor(CodeEditWidget* codeEdit);
 
     bool assemble();
+    bool launchAse();
     void configureAse();
     bool viewLabels();
     bool viewMif();

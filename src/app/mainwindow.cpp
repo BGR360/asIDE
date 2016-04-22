@@ -241,6 +241,34 @@ bool MainWindow::assemble()
 #endif
 }
 
+bool MainWindow::launchAse()
+{
+    // ase100 is only supported on Windows and Linux
+#if defined(Q_OS_LINUX) || defined(Q_OS_WIN)
+    if (!pathToAse100.isEmpty()) {
+        QProcess::startDetached(pathToAse100);
+    } else {
+        const QMessageBox::StandardButton ret
+            = QMessageBox::warning(this, tr("asIDE"),
+                                   tr("The path to the ase100 "
+                                      "executable has not been set.\n"
+                                      "Do you want to set it now?"),
+                                   QMessageBox::Cancel | QMessageBox::Yes);
+        switch(ret)
+        {
+        case QMessageBox::Yes:
+            ui->actionConfigureAse->trigger();
+            break;
+        default:
+            break;
+        }
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
 void MainWindow::configureAse()
 {
     AseConfigDialog* dialog = new AseConfigDialog(this, pathToAse100);
@@ -318,6 +346,7 @@ void MainWindow::connectSignalsAndSlots()
     connect(ui->actionQuit, SIGNAL(triggered(bool)), QApplication::instance(), SLOT(quit()));
 
     connect(ui->actionAssemble, SIGNAL(triggered(bool)), this, SLOT(assemble()));
+    connect(ui->actionLaunchAse, SIGNAL(triggered(bool)), this, SLOT(launchAse()));
     connect(ui->actionConfigureAse, SIGNAL(triggered(bool)), this, SLOT(configureAse()));
     connect(ui->actionViewLabels, SIGNAL(triggered(bool)), this, SLOT(viewLabels()));
     connect(ui->actionViewMif, SIGNAL(triggered(bool)), this, SLOT(viewMif()));
