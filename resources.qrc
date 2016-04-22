@@ -12,5 +12,8 @@
         <file>images/assemble.png</file>
         <file>html/e100-instructions.html</file>
         <file>html/about.html</file>
+        <file>images/app-icon/png/asIDE_16.png</file>
+        <file>images/app-icon/png/asIDE_24.png</file>
+        <file>images/app-icon/png/asIDE_32.png</file>
     </qresource>
 </RCC>
