@@ -73,17 +73,21 @@ void TokenViewDialog::setEditor(CodeEditWidget* newEditor)
             connect(tokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded()));
             connect(tokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved()));
         }
+    } else {
+        tokenModel.setStringList(QStringList());
     }
 }
 
 void TokenViewDialog::onTokensAdded()
 {
-    updateTokens();
+    if (isVisible())
+        updateTokens();
 }
 
 void TokenViewDialog::onTokensRemoved()
 {
-    updateTokens();
+    if (isVisible())
+        updateTokens();
 }
 
 void TokenViewDialog::updateTokens()

@@ -167,39 +167,40 @@ void MainWindow::onTabSwitched(int index)
     updateCurrentFile();
 
     // Check to see if the "View Labels" and "View MIF" options are available for this file
-    QString fileExtension = currentEditor->fileExtension();
-    if (fileExtension == "e") {
-        ui->actionViewLabels->setEnabled(true);
-        ui->actionViewMif->setEnabled(true);
-    } else {
-        ui->actionViewLabels->setEnabled(false);
-        ui->actionViewMif->setEnabled(false);
+    if (currentEditor) {
+        QString fileExtension = currentEditor->fileExtension();
+        if (fileExtension == "e") {
+            ui->actionViewLabels->setEnabled(true);
+            ui->actionViewMif->setEnabled(true);
+        } else {
+            ui->actionViewLabels->setEnabled(false);
+            ui->actionViewMif->setEnabled(false);
+        }
     }
 }
 
 void MainWindow::setEditor(CodeEditWidget* codeEdit)
 {
-    if (codeEdit) {
+    if (codeEdit == currentEditor)
+        return;
 
-        if (codeEdit == currentEditor)
-            return;
+    // Disconnect signals and slots from the previous editor
+    if (currentEditor) {
+        QPlainTextEdit* textEdit = currentEditor->textEdit();
+        disconnect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
+        disconnect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
+        disconnect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
+        disconnect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
+        disconnect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
+        disconnect(textEdit, SIGNAL(textChanged()), this, SLOT(onModifyCurrentFile()));
+    }
 
-        // Disconnect signals and slots from the previous editor
-        if (currentEditor) {
-            QPlainTextEdit* textEdit = currentEditor->textEdit();
-            disconnect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
-            disconnect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
-            disconnect(ui->actionCut, SIGNAL(triggered(bool)), textEdit, SLOT(cut()));
-            disconnect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
-            disconnect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
-            disconnect(textEdit, SIGNAL(textChanged()), this, SLOT(onModifyCurrentFile()));
-        }
+    currentEditor = codeEdit;
+    labelViewDialog->setEditor(currentEditor);
+    tokenViewDialog->setEditor(currentEditor);
 
-        currentEditor = codeEdit;
-        labelViewDialog->setEditor(currentEditor);
-        tokenViewDialog->setEditor(currentEditor);
-
-        // Hook up the necessary signals and slots for the code editor
+    // Hook up the necessary signals and slots for the new editor
+    if (currentEditor) {
         QPlainTextEdit* textEdit = currentEditor->textEdit();
         connect(ui->actionUndo, SIGNAL(triggered(bool)), textEdit, SLOT(undo()));
         connect(ui->actionRedo, SIGNAL(triggered(bool)), textEdit, SLOT(redo()));
@@ -207,6 +208,11 @@ void MainWindow::setEditor(CodeEditWidget* codeEdit)
         connect(ui->actionCopy, SIGNAL(triggered(bool)), textEdit, SLOT(copy()));
         connect(ui->actionPaste, SIGNAL(triggered(bool)), textEdit, SLOT(paste()));
         connect(textEdit, SIGNAL(textChanged()), this, SLOT(onModifyCurrentFile()));
+        ui->actionViewLabels->setEnabled(true);
+        ui->actionViewMif->setEnabled(true);
+    } else {
+        ui->actionViewLabels->setEnabled(false);
+        ui->actionViewMif->setEnabled(false);
     }
 }
 
@@ -303,6 +309,8 @@ void MainWindow::configureAse()
 bool MainWindow::viewLabels()
 {
     statusBar()->showMessage(tr("Attempting to open Labels file..."));
+    if (!currentEditor)
+        return false;
     QString labelsPath = currentEditor->fileNameWithoutExtension().append(".labels");
     bool exists = QFileInfo(labelsPath).exists();
     if (!exists) {
@@ -311,7 +319,6 @@ bool MainWindow::viewLabels()
             return false;
         }
     }
-
     loadFile(labelsPath);
     return true;
 }
@@ -319,6 +326,8 @@ bool MainWindow::viewLabels()
 bool MainWindow::viewMif()
 {
     statusBar()->showMessage(tr("Attempting to open MIF file..."));
+    if (!currentEditor)
+        return false;
     QString mifPath = currentEditor->fileNameWithoutExtension().append(".mif");
     bool exists = QFileInfo(mifPath).exists();
     if (!exists) {
@@ -327,7 +336,6 @@ bool MainWindow::viewMif()
             return false;
         }
     }
-
     loadFile(mifPath);
     return true;
 }

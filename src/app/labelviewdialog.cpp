@@ -55,8 +55,10 @@ void LabelViewDialog::setEditor(CodeEditWidget* newEditor)
     if (editor) {
         DocumentLabelIndex* indexer = editor->labelIndex();
         if (indexer) {
-            disconnect(indexer, SIGNAL(labelAdded(QString,int)), this, SLOT(onLabelAdded()));
-            disconnect(indexer, SIGNAL(labelRemoved(QString,int)), this, SLOT(onLabelRemoved()));
+            disconnect(indexer, SIGNAL(labelAdded(QString,int)), this, SLOT(onLabelIndexChange()));
+            disconnect(indexer, SIGNAL(labelRemoved(QString,int)), this, SLOT(onLabelIndexChange()));
+            disconnect(indexer, SIGNAL(lineAdded(int)), this, SLOT(onLabelIndexChange()));
+            disconnect(indexer, SIGNAL(lineRemoved(int)), this, SLOT(onLabelIndexChange()));
         }
     }
 
@@ -70,23 +72,31 @@ void LabelViewDialog::setEditor(CodeEditWidget* newEditor)
 
         DocumentLabelIndex* indexer = editor->labelIndex();
         if (indexer) {
-            connect(indexer, SIGNAL(labelAdded(QString,int)), this, SLOT(onLabelAdded()));
-            connect(indexer, SIGNAL(labelRemoved(QString,int)), this, SLOT(onLabelRemoved()));
+            connect(indexer, SIGNAL(labelAdded(QString,int)), this, SLOT(onLabelIndexChange()));
+            connect(indexer, SIGNAL(labelRemoved(QString,int)), this, SLOT(onLabelIndexChange()));
+            connect(indexer, SIGNAL(lineAdded(int)), this, SLOT(onLabelIndexChange()));
+            connect(indexer, SIGNAL(lineRemoved(int)), this, SLOT(onLabelIndexChange()));
         }
+    } else {
+        labelModel.setStringList(QStringList());
     }
 }
 
-void LabelViewDialog::onLabelAdded()
+void LabelViewDialog::onLabelIndexChange()
 {
-    updateLabels();
-}
-
-void LabelViewDialog::onLabelRemoved()
-{
-    updateLabels();
+    if (isVisible())
+        updateLabels();
 }
 
 void LabelViewDialog::updateLabels()
 {
-    labelModel.setStringList(editor->labelIndex()->labels());
+    DocumentLabelIndex* indexer = editor->labelIndex();
+    QStringList labels = indexer->labels();
+    QStringList::iterator i;
+    for (i = labels.begin(); i != labels.end(); ++i) {
+        QString& label = *i;
+        const int lineNumberOfLabel = indexer->lineNumberOfLabel(label);
+        label.insert(0, QString("%1: ").arg(lineNumberOfLabel));
+    }
+    labelModel.setStringList(labels);
 }

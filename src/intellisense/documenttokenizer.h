@@ -57,6 +57,8 @@ signals:
     void documentChanged(QTextDocument* newDocument);
     void tokensAdded(const TokenList& tokens, int lineNumber);
     void tokensRemoved(const TokenList& tokens, int lineNumber);
+    void lineAdded(int afterLine);
+    void lineRemoved(int lineNumber);
 
 protected:
     void addLine(int afterLine);

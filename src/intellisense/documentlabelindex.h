@@ -50,6 +50,7 @@ public:
     DocumentTokenizer* tokenizer();
 
     bool hasLabel(const QString& label) const;
+    bool hasLabelAtLine(int line) const;
     bool hasLabelAtLine(const QString& label, int line) const;
     bool hasLine(int line) const;
     int lineNumberOfLabel(const QString& label) const;
@@ -60,6 +61,8 @@ signals:
     void documentChanged(QTextDocument* newDocument);
     void labelAdded(const QString& label, int line);
     void labelRemoved(const QString& label, int line);
+    void lineAdded(int afterLine);
+    void lineRemoved(int lineNumber);
 
 protected:
     void reset();
@@ -71,6 +74,8 @@ protected:
 private slots:
     void onTokensAdded(const TokenList& tokens, int line);
     void onTokensRemoved(const TokenList& tokens, int line);
+    void onLineAdded(int afterLine);
+    void onLineRemoved(int lineNumber);
 
 private:
     DocumentTokenizer* mTokenizer;

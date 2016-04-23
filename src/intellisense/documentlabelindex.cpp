@@ -50,6 +50,8 @@ void DocumentLabelIndex::setDocument(QTextDocument* doc)
     if (mTokenizer) {
         disconnect(mTokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
         disconnect(mTokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
+        disconnect(mTokenizer, SIGNAL(lineAdded(int)), this, SLOT(onLineAdded(int)));
+        disconnect(mTokenizer, SIGNAL(lineRemoved(int)), this, SLOT(onLineRemoved(int)));
 
         delete mTokenizer;
     }
@@ -61,6 +63,8 @@ void DocumentLabelIndex::setDocument(QTextDocument* doc)
     // Connect the new tokenizer
     connect(mTokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
     connect(mTokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
+    connect(mTokenizer, SIGNAL(lineAdded(int)), this, SLOT(onLineAdded(int)));
+    connect(mTokenizer, SIGNAL(lineRemoved(int)), this, SLOT(onLineRemoved(int)));
 
     emit documentChanged(doc);
 }
@@ -75,6 +79,11 @@ bool DocumentLabelIndex::hasLabel(const QString& label) const
     return mLabels.contains(label);
 }
 
+bool DocumentLabelIndex::hasLabelAtLine(int line) const
+{
+    return mLabelsByLine.contains(line);
+}
+
 bool DocumentLabelIndex::hasLabelAtLine(const QString& label, int line) const
 {
     if (!hasLine(line))
@@ -85,7 +94,7 @@ bool DocumentLabelIndex::hasLabelAtLine(const QString& label, int line) const
 
 bool DocumentLabelIndex::hasLine(int line) const
 {
-    return mLabelsByLine.contains(line);
+    return mLabelsByLine.size() > line;
 }
 
 int DocumentLabelIndex::lineNumberOfLabel(const QString& label) const
@@ -209,6 +218,39 @@ void DocumentLabelIndex::onTokensRemoved(const TokenList& tokens, int line)
             removeLabel(token.value, line);
         }
     }
+}
+
+void DocumentLabelIndex::onLineAdded(int afterLine)
+{
+    // Shift the line numbers of all the labels that come after afterLine
+    qDebug() << "Shifting labels forward after line" << afterLine;
+    const int lastLine = tokenizer()->numLines() - 1;
+    for (int i = lastLine; i > afterLine; --i) {
+        if (hasLabelAtLine(i)) {
+            // Shift the label one line up
+            mLabelsByLine[i + 1] = mLabelsByLine[i];
+            mLinesByLabel[mLabelsByLine[i]] += 1;
+            // Delete the entry for the original line
+            mLabelsByLine.remove(i);
+        }
+    }
+    emit lineAdded(afterLine);
+}
+
+void DocumentLabelIndex::onLineRemoved(int lineNumber)
+{
+    qDebug() << "Shifting labels backward after line" << lineNumber - 1;
+    const int lastLine = tokenizer()->numLines() - 1;
+    for (int i = lineNumber + 1; i <= lastLine; ++i) {
+        if (hasLabelAtLine(i)) {
+            // Shift the label one line down
+            mLabelsByLine[i - 1] = mLabelsByLine[i];
+            mLinesByLabel[mLabelsByLine[i]] -= 1;
+            // Delete the entry for the original line
+            mLabelsByLine.remove(i);
+        }
+    }
+    emit lineRemoved(lineNumber);
 }
 
 const QString& DocumentLabelIndex::findLabelRef(const QString& label) const

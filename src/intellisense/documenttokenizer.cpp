@@ -122,6 +122,7 @@ void DocumentTokenizer::addLine(int afterLine)
         mTokensByLine[whereToAddNewlineToken].push_back(newline);
         emit tokensAdded(added, whereToAddNewlineToken);
     }
+    emit lineAdded(afterLine);
 }
 
 void DocumentTokenizer::removeLine(int lineNumber)
@@ -144,6 +145,7 @@ void DocumentTokenizer::removeLine(int lineNumber)
         mTokensByLine[lineNumber - 1].pop_back();
         emit tokensRemoved(removedTokens, lineNumber - 1);
     }
+    emit lineRemoved(lineNumber);
 }
 
 void DocumentTokenizer::setLine(const TokenList& tokens, int line)

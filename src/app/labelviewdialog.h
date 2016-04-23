@@ -44,8 +44,7 @@ public:
     void setEditor(CodeEditWidget* newEditor);
 
 private slots:
-    void onLabelAdded();
-    void onLabelRemoved();
+    void onLabelIndexChange();
     void updateLabels();
 
 private:
