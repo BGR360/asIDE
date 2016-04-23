@@ -26,7 +26,7 @@
 
 SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* labelIndex)
     : QSyntaxHighlighter(parent),
-      labelIndex(labelIndex)
+      labelIndexer(labelIndex)
 {
     HighlightingRule rule;
 
@@ -37,29 +37,21 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
     rule.format = numberFormat;
     highlightingRules.append(rule);
 
-    // Create a highlighting rule for E100 labels that mark instructions
+    //labelExpression = QRegExp("^[A-Za-z]\\w*\\s");
+    labelExpression = Token::REGEX[Token::Label];
+
+    // Create a highlighting format for E100 labels that mark instructions
     functionLabelFormat.setForeground(Qt::darkRed);
     functionLabelFormat.setFontItalic(true);
     functionLabelFormat.setFontWeight(QFont::DemiBold);
-    //labelExpression = QRegExp("^[A-Za-z]\\w*\\s");
-    labelExpression = Token::REGEX[Token::Label];
-    rule.pattern = labelExpression;
-    rule.format = functionLabelFormat;
-    highlightingRules.append(rule);
 
-    // Create a highlighting rule for E100 labels that are variables
+    // Create a highlighting format for E100 labels that are variables
     variableLabelFormat.setFontItalic(false);
-    rule.pattern = labelExpression;
-    rule.format = variableLabelFormat;
-    //highlightingRules.append(rule);
 
-    // Create a highlighting rule for bad or erroneous E100 labels
+    // Create a highlighting format for bad or erroneous E100 labels
     badLabelFormat.setFontUnderline(true);
     badLabelFormat.setUnderlineColor(Qt::red);
-    badLabelFormat.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-    rule.pattern = labelExpression;
-    rule.format = badLabelFormat;
-    //highlightingRules.append(rule);
+    badLabelFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
 
     // Create a highlighting rule for all the keywords (instructions)
     keywordFormat.setForeground(Qt::darkBlue);
@@ -67,7 +59,6 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
     rule.pattern = QRegExp(QString("\\b(%1)\\b").arg(Token::REGEX[Token::Instruction].pattern()));
     rule.format = keywordFormat;
     highlightingRules.append(rule);
-
 
     // Create a highlighting rule for single-quoted characters
     quotationFormat.setForeground(Qt::darkYellow);
@@ -96,6 +87,25 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
 
 void SyntaxHighlighter::highlightBlock(const QString& text)
 {
+    qDebug() << "highlighting line" << currentBlock().blockNumber();
+
+    // First, utilize the DocumentLabelIndex to highlight labels
+    int index = labelExpression.indexIn(text);
+    while (index >= 0) {
+        int length = labelExpression.matchedLength();
+        if (length == 0)
+            break;
+        QString matchedLabel = text.mid(index, length);
+        if (!isValidLabel(matchedLabel))
+            setFormat(index, length, badLabelFormat);
+        else if (isFunctionLabel(matchedLabel))
+            setFormat(index, length, functionLabelFormat);
+        else if (isVariableLabel(matchedLabel))
+            setFormat(index, length, variableLabelFormat);
+        index = labelExpression.indexIn(text, index + length);
+    }
+
+    // Then rehighlight using the other HighlightingRules
     foreach (const HighlightingRule &rule, highlightingRules) {
         QRegExp expression(rule.pattern);
         int index = expression.indexIn(text);
@@ -103,19 +113,7 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
             int length = expression.matchedLength();
             if (length == 0)
                 break;
-
-            if (expression == labelExpression) {
-                QString matchedLabel = text.mid(index, length);
-                if (isFunctionLabel(matchedLabel))
-                    setFormat(index, length, functionLabelFormat);
-                else if (isVariableLabel(matchedLabel))
-                    setFormat(index, length, variableLabelFormat);
-                //else
-                    //setFormat(index, length, badLabelFormat);
-            } else {
-                setFormat(index, length, rule.format);
-            }
-
+            setFormat(index, length, rule.format);
             index = expression.indexIn(text, index + length);
         }
     }
@@ -123,9 +121,10 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
 
 bool SyntaxHighlighter::isValidLabel(const QString& label) const
 {
-    if (!labelIndex)
-        return false;
-    if (!labelIndex->hasLabel(label))
+    qDebug() << "Checking for label:" << label;
+    if (!labelIndexer)
+        return true;
+    if (!labelIndexer->hasLabel(label))
         return false;
     return true;
 }
@@ -134,10 +133,8 @@ Token SyntaxHighlighter::getStuffAfterLabel(const QString& label) const
 {
     Token defaultToken = {QString(), Token::Unrecognized};
 
-    if (!isValidLabel(label))
-        return defaultToken;
-    const DocumentTokenizer* tokenizer = labelIndex->tokenizer();
-    const TokenList tokensInDeclarationLine = tokenizer->tokensInLine(labelIndex->lineNumberOfLabel(label));
+    const DocumentTokenizer* tokenizer = labelIndexer->tokenizer();
+    const TokenList tokensInDeclarationLine = tokenizer->tokensInLine(labelIndexer->lineNumberOfLabel(label));
     Token searchToken = {label, Token::Label};
     const int indexOfLabelInLine = tokensInDeclarationLine.indexOf(searchToken);
     if (indexOfLabelInLine == -1 || tokensInDeclarationLine.size() < indexOfLabelInLine + 2)
@@ -150,7 +147,9 @@ bool SyntaxHighlighter::isFunctionLabel(const QString& label) const
 {
     if (!isValidLabel(label))
         return false;
-    return getStuffAfterLabel(label).type == Token::Instruction;
+    Token stuffAfterLabel = getStuffAfterLabel(label);
+    return stuffAfterLabel.type == Token::Instruction
+            || stuffAfterLabel.type == Token::Newline;
 }
 
 bool SyntaxHighlighter::isVariableLabel(const QString& label) const
@@ -159,7 +158,7 @@ bool SyntaxHighlighter::isVariableLabel(const QString& label) const
         return false;
     Token stuffAfterLabel = getStuffAfterLabel(label);
     return stuffAfterLabel.type == Token::IntLiteral
-            || stuffAfterLabel.type == Token::CharLiteral;
-            //|| (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
+            || stuffAfterLabel.type == Token::CharLiteral
+            || (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
 }
 

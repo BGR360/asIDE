@@ -88,6 +88,5 @@ void LabelViewDialog::onLabelRemoved()
 
 void LabelViewDialog::updateLabels()
 {
-    const QStringList& labelStrings = editor->labelIndex()->labels();
-    labelModel.setStringList(labelStrings);
+    labelModel.setStringList(editor->labelIndex()->labels());
 }

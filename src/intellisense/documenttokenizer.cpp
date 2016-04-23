@@ -122,7 +122,6 @@ void DocumentTokenizer::addLine(int afterLine)
         mTokensByLine[whereToAddNewlineToken].push_back(newline);
         emit tokensAdded(added, whereToAddNewlineToken);
     }
-    qDebug() << mTokensByLine;
 }
 
 void DocumentTokenizer::removeLine(int lineNumber)
@@ -362,7 +361,7 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
         for (int i = lineToAdd; i < lineToAdd + difference; ++i) {
             addLine(i);
         }
-        parseLines(lineToAdd, lineToAdd + difference);
+        parseLines(lineToAdd, lineToAdd + difference + 1);
     }
 }
 

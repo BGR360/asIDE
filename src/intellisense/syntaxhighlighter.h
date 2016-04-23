@@ -42,7 +42,7 @@ class INTELLISENSE_EXPORT SyntaxHighlighter : public QSyntaxHighlighter
     Q_OBJECT
 
 public:
-    SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* labelIndex = 0);
+    SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* labelIndexer = 0);
 
 protected:
     void highlightBlock(const QString& text) Q_DECL_OVERRIDE;
@@ -59,7 +59,7 @@ private:
     QTextCharFormat variableLabelFormat;
     QTextCharFormat badLabelFormat;
     QRegExp labelExpression;
-    DocumentLabelIndex* labelIndex;
+    DocumentLabelIndex* labelIndexer;
 
     QTextCharFormat keywordFormat;
     QTextCharFormat includeFormat;

@@ -72,7 +72,6 @@ DocumentTokenizer* DocumentLabelIndex::tokenizer()
 
 bool DocumentLabelIndex::hasLabel(const QString& label) const
 {
-    qDebug() << "Checking for label:" << label;
     return mLabels.contains(label);
 }
 
