@@ -159,6 +159,7 @@ bool SyntaxHighlighter::isVariableLabel(const QString& label) const
     Token stuffAfterLabel = getStuffAfterLabel(label);
     return stuffAfterLabel.type == Token::IntLiteral
             || stuffAfterLabel.type == Token::CharLiteral
-            || (stuffAfterLabel.type == Token::Label && isVariableLabel(stuffAfterLabel.value));
+            || (stuffAfterLabel.type == Token::Label &&
+                stuffAfterLabel.value != label && isVariableLabel(stuffAfterLabel.value));
 }
 

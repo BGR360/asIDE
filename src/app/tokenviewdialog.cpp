@@ -93,10 +93,13 @@ void TokenViewDialog::onTokensRemoved()
 void TokenViewDialog::updateTokens()
 {
     QStringList tokenStrings;
-    TokenList tokens = editor->labelIndex()->tokenizer()->tokens();
-    foreach (const Token& token, tokens) {
-        QString tokenString = QString("%1: %2").arg(Token::TYPE_NAMES[token.type]).arg(token.value);
-        tokenStrings.append(tokenString);
+    DocumentTokenizer* tokenizer = editor->labelIndex()->tokenizer();
+    for (int i = 0; i < tokenizer->numLines(); ++i) {
+        TokenList tokensInLine = tokenizer->tokensInLine(i);
+        foreach (const Token& token, tokensInLine) {
+            QString tokenString = QString("%1: %2: %3").arg(i).arg(Token::TYPE_NAMES[token.type]).arg(token.value);
+            tokenStrings.append(tokenString);
+        }
     }
     tokenModel.setStringList(tokenStrings);
 }

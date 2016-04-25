@@ -23,6 +23,8 @@
 #include "labelviewdialog.h"
 #include "ui_labelviewdialog.h"
 
+#include <algorithm> // std::sort
+
 #include "codeeditwidget.h"
 #include <documentlabelindex.h>
 
@@ -98,5 +100,6 @@ void LabelViewDialog::updateLabels()
         const int lineNumberOfLabel = indexer->lineNumberOfLabel(label);
         label.insert(0, QString("%1: ").arg(lineNumberOfLabel));
     }
+    std::sort(labels.begin(), labels.end());
     labelModel.setStringList(labels);
 }

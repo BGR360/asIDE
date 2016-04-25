@@ -89,7 +89,7 @@ TokenList DocumentTokenizer::tokens()
 TokenList DocumentTokenizer::tokensInLine(int lineNumber) const
 {
     Q_ASSERT(lineNumber >= 0);
-    Q_ASSERT(lineNumber < numLines());
+    Q_ASSERT(lineNumber == 0 || lineNumber < numLines());
 
     return mTokensByLine[lineNumber];
 }
@@ -108,6 +108,11 @@ void DocumentTokenizer::addLine(int afterLine)
 {
     qDebug() << "adding line after line" << afterLine;
     bool isAddingLineToEndOfDoc = afterLine == numLines() - 1;
+
+    // Make sure we have at least afterLine number of lines
+    while (numLines() <= afterLine) {
+        mTokensByLine.push_back(TokenList());
+    }
 
     TokenLineMap::iterator whereToInsertLine = mTokensByLine.begin() + afterLine + 1;
     mTokensByLine.insert(whereToInsertLine, TokenList());
@@ -136,10 +141,10 @@ void DocumentTokenizer::removeLine(int lineNumber)
     TokenList removedTokens = mTokensByLine[lineNumber];
 
     mTokensByLine.erase(mTokensByLine.begin() + lineNumber);
-    emit tokensRemoved(removedTokens, lineNumber);
 
     // Remove the newline token from the previous line if the previous line is now the last line
     if (isRemovingLastLine) {
+        emit tokensRemoved(removedTokens, lineNumber);
         removedTokens.clear();
         removedTokens.push_back({"\n", Token::Newline});
         mTokensByLine[lineNumber - 1].pop_back();
@@ -160,7 +165,7 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
     }
 
     // Set the tokens in that line to the TokenList passed in
-    QSet<Token> oldTokens = QSet<Token>::fromList(mTokensByLine[line]);
+    TokenList oldTokens = mTokensByLine[line];
     mTokensByLine[line] = tokens;
 
     // If that line is the last line, remove the trailing newline token
@@ -169,14 +174,19 @@ void DocumentTokenizer::setLine(const TokenList& tokens, int line)
     }
 
     // Report which tokens were added/removed
-    QSet<Token> newTokens = QSet<Token>::fromList(mTokensByLine[line]);
+    const TokenList& newTokens = tokens;
 
-    QSet<Token> tokensThatStayed = oldTokens;
-    tokensThatStayed.intersect(newTokens);
+    TokenList removedTokens;
+    foreach (const Token& token, oldTokens) {
+        if (!newTokens.contains(token))
+            removedTokens.push_back(token);
+    }
 
-    TokenList addedTokens, removedTokens;
-    addedTokens = newTokens.subtract(tokensThatStayed).toList();
-    removedTokens = oldTokens.subtract(tokensThatStayed).toList();
+    TokenList addedTokens;
+    foreach (const Token& token, newTokens) {
+        if (!oldTokens.contains(token))
+            addedTokens.push_back(token);
+    }
 
     if (removedTokens.size() > 0) {
         qDebug() << "Removed tokens:" << removedTokens;
@@ -316,7 +326,8 @@ void DocumentTokenizer::onDocumentContentsChanged(int position, int charsRemoved
                 "removed=" << charsRemoved <<
                 "added=" << charsAdded;
 
-    mCursorPos = position;
+    mCursorPos = position + charsAdded - charsRemoved;
+    if (mCursorPos < 0) mCursorPos = 0;
 
     const int startLine = getLineNumberOfPosition(position);
     const int endLineOfAdded = getLineNumberOfPosition(position + charsAdded);
@@ -346,12 +357,14 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
     qDebug() << "cursor pos:" << cursorPos;
 
     // Remove lines if line count was decreased
+    // Also, reparse to account for removed lines
     if (difference > 0) {
         qDebug() << difference << "lines removed";
         int lineToRemove = getLineNumberOfPosition(cursorPos) + 1;
         for (int i = lineToRemove + difference - 1; i >= lineToRemove; --i) {
             removeLine(i);
         }
+        parseLines(lineToRemove - 1, lineToRemove + 1);
     }
 
     // Add lines if line count was increased
@@ -359,11 +372,12 @@ void DocumentTokenizer::onLineCountChange(int newLineCount)
     if (difference < 0) {
         difference *= -1;
         qDebug() << difference << "lines added";
-        int lineToAdd = getLineNumberOfPosition(cursorPos) - 1;
-        for (int i = lineToAdd; i < lineToAdd + difference; ++i) {
+        const int finalLineToAdd = getLineNumberOfPosition(cursorPos);
+        const int firstLineToAdd = finalLineToAdd - difference + 1;
+        for (int i = firstLineToAdd; i <= finalLineToAdd; ++i) {
             addLine(i);
         }
-        parseLines(lineToAdd, lineToAdd + difference + 1);
+        parseLines(firstLineToAdd, finalLineToAdd);
     }
 }
 

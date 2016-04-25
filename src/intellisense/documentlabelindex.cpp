@@ -76,56 +76,57 @@ DocumentTokenizer* DocumentLabelIndex::tokenizer()
 
 bool DocumentLabelIndex::hasLabel(const QString& label) const
 {
-    return mLabels.contains(label);
+    return mLinesByLabel.contains(label);
 }
 
 bool DocumentLabelIndex::hasLabelAtLine(int line) const
 {
-    return mLabelsByLine.contains(line);
+    foreach (int l, mLinesByLabel) {
+        if (l == line)
+            return true;
+    }
+    return false;
 }
 
 bool DocumentLabelIndex::hasLabelAtLine(const QString& label, int line) const
 {
-    if (!hasLine(line))
+    if (!hasLabel(label))
         return false;
-    const QString* labelAtLine = mLabelsByLine[line];
-    return QStringRef(labelAtLine) == label;
-}
-
-bool DocumentLabelIndex::hasLine(int line) const
-{
-    return mLabelsByLine.size() > line;
+    if (!hasLabelAtLine(line))
+        return false;
+    return mLinesByLabel[label] == line;
 }
 
 int DocumentLabelIndex::lineNumberOfLabel(const QString& label) const
 {
     if (!hasLabel(label))
         return -1;
-
-    const QString& existingLabel = findLabelRef(label);
-    return mLinesByLabel[&existingLabel];
+    return mLinesByLabel[label];
 }
 
 QString DocumentLabelIndex::labelAtLine(int line) const
 {
-    if (!hasLine(line))
-        return QString();
-    return *(mLabelsByLine[line]);
+    QString label;
+    QMap<QString, int>::const_iterator i;
+    for (i = mLinesByLabel.begin(); i != mLinesByLabel.end(); ++i) {
+        if (i.value() == line)
+            return i.key();
+    }
+    return QString();
 }
 
 QList<QString> DocumentLabelIndex::labels() const
 {
     QList<QString> labels;
-    foreach (const QString* label, mLabelsByLine) {
-        labels.push_back(*label);
+    QMap<QString, int>::const_iterator i;
+    for (i = mLinesByLabel.constBegin(); i != mLinesByLabel.constEnd(); ++i) {
+        labels.push_back(i.key());
     }
     return labels;
 }
 
 void DocumentLabelIndex::reset()
 {
-    mLabels.clear();
-    mLabelsByLine.clear();
     mLinesByLabel.clear();
 }
 
@@ -166,10 +167,7 @@ void DocumentLabelIndex::addLabel(const QString& label, int line)
         return;
 
     // Add this label to our data structures
-    QSet<QString>::iterator inserted = mLabels.insert(label);
-    const QString* newLabel = &(*inserted);
-    mLabelsByLine[line] = newLabel;
-    mLinesByLabel[newLabel] = line;
+    mLinesByLabel[label] = line;
 
     emit labelAdded(label, line);
 }
@@ -178,24 +176,15 @@ void DocumentLabelIndex::removeLabel(const QString& label, int line)
 {
     qDebug() << "removing label:" << label << "at line:" << line;
 
-    // If we don't have this label, don't do anything
-    if (!hasLabel(label))
+    if (!hasLabelAtLine(label, line))
         return;
-
-    // If we don't have anything on the same line as line, don't do anything
-    if (!hasLine(line))
-        return;
-
-    // If the label on the same line as line is not equal to label, don't do anything
-    const QString* labelAtLine = mLabelsByLine[line];
-    if (QStringRef(labelAtLine) != label)
+    if (labelAtLine(line) != label)
         return;
 
     // Remove the label from our data structures
-    mLabelsByLine.remove(line);
-    mLinesByLabel.remove(labelAtLine);
-    mLabels.remove(label);
+    mLinesByLabel.remove(label);
 
+    qDebug() << "removed";
     emit labelRemoved(label, line);
 }
 
@@ -214,7 +203,7 @@ void DocumentLabelIndex::onTokensAdded(const TokenList& tokens, int line)
 void DocumentLabelIndex::onTokensRemoved(const TokenList& tokens, int line)
 {
     foreach (const Token& token, tokens) {
-        if (token.type == Token::Label) {
+        if (hasLabelAtLine(token.value, line)) {
             removeLabel(token.value, line);
         }
     }
@@ -228,10 +217,8 @@ void DocumentLabelIndex::onLineAdded(int afterLine)
     for (int i = lastLine; i > afterLine; --i) {
         if (hasLabelAtLine(i)) {
             // Shift the label one line up
-            mLabelsByLine[i + 1] = mLabelsByLine[i];
-            mLinesByLabel[mLabelsByLine[i]] += 1;
-            // Delete the entry for the original line
-            mLabelsByLine.remove(i);
+            QString label = labelAtLine(i);
+            mLinesByLabel[label] += 1;
         }
     }
     emit lineAdded(afterLine);
@@ -239,21 +226,17 @@ void DocumentLabelIndex::onLineAdded(int afterLine)
 
 void DocumentLabelIndex::onLineRemoved(int lineNumber)
 {
-    qDebug() << "Shifting labels backward after line" << lineNumber - 1;
-    const int lastLine = tokenizer()->numLines() - 1;
+    // The last line that we used to have should be one after the actual last line
+    const int lastLine = tokenizer()->numLines();
+    qDebug() << "Shifting labels backward after line" << lineNumber - 1 << "until line" << lastLine;
+    qDebug() << mLinesByLabel;
     for (int i = lineNumber + 1; i <= lastLine; ++i) {
         if (hasLabelAtLine(i)) {
             // Shift the label one line down
-            mLabelsByLine[i - 1] = mLabelsByLine[i];
-            mLinesByLabel[mLabelsByLine[i]] -= 1;
-            // Delete the entry for the original line
-            mLabelsByLine.remove(i);
+            QString label = labelAtLine(i);
+            qDebug() << "shifting" << label << "down from line" << i << "to line" << i - 1;
+            mLinesByLabel[label] -= 1;
         }
     }
     emit lineRemoved(lineNumber);
-}
-
-const QString& DocumentLabelIndex::findLabelRef(const QString& label) const
-{
-    return *(mLabels.find(label));
 }

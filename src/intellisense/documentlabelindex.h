@@ -52,7 +52,6 @@ public:
     bool hasLabel(const QString& label) const;
     bool hasLabelAtLine(int line) const;
     bool hasLabelAtLine(const QString& label, int line) const;
-    bool hasLine(int line) const;
     int lineNumberOfLabel(const QString& label) const;
     QString labelAtLine(int line) const;
     QList<QString> labels() const;
@@ -80,11 +79,7 @@ private slots:
 private:
     DocumentTokenizer* mTokenizer;
 
-    QSet<QString> mLabels;
-    QMap<int, const QString*> mLabelsByLine;
-    QMap<const QString*, int> mLinesByLabel;
-
-    const QString& findLabelRef(const QString& label) const;
+    QMap<QString, int> mLinesByLabel;
 };
 
 #endif // DOCUMENTLABELINDEX_H
