@@ -69,7 +69,8 @@ protected:
     void parse();
     void parse(int beginPos, int endPos);
     void parseLines(int beginLine, int endLine);
-    TokenList parseLine(const QString& line);
+    void parseLine(int lineNumber);
+    TokenList parseLineText(const QString& line);
     Token parseWord(const QString& word);
 
 private slots:
@@ -83,6 +84,8 @@ private:
     QTextCursor mCursor;
     int mCursorPos;
     bool mReceivedLongDocumentChange;
+    bool mAwaitingLineCountChange;
+    int mAwaitingLineNumber;
 
     TokenList mTokens;
     TokenLineMap mTokensByLine;

@@ -51,7 +51,7 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
     // Create a highlighting format for bad or erroneous E100 labels
     badLabelFormat.setFontUnderline(true);
     badLabelFormat.setUnderlineColor(Qt::red);
-    badLabelFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
+    badLabelFormat.setUnderlineStyle(QTextCharFormat::NoUnderline);
 
     // Create a highlighting rule for all the keywords (instructions)
     keywordFormat.setForeground(Qt::darkBlue);
