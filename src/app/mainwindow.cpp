@@ -48,7 +48,7 @@ static const QUrl BUG_REPORTING_URL("https://github.com/bgr360/asIDE/issues");
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    currentEditor(0),
+    currentEditor(NULL),
     labelViewDialog(new LabelViewDialog(this)),
     instructionViewDialog(new InstructionViewDialog(this)),
     tokenViewDialog(new TokenViewDialog(this))

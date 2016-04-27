@@ -37,8 +37,8 @@
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::CodeEditWidget),
-    highlighter(0),
-    labelIndexer(0)
+    highlighter(NULL),
+    labelIndexer(NULL)
 {
     ui->setupUi(this);
 
@@ -50,6 +50,10 @@ CodeEditWidget::CodeEditWidget(QWidget* parent) :
 CodeEditWidget::~CodeEditWidget()
 {
     delete ui;
+    if (labelIndexer)
+        delete labelIndexer;
+    if (highlighter)
+        delete highlighter;
 }
 
 QString CodeEditWidget::fileExtension() const
@@ -152,6 +156,7 @@ void CodeEditWidget::autoIndent()
 
 void CodeEditWidget::onTokensAdded(const TokenList& tokens, int lineNumber)
 {
+    Q_UNUSED(lineNumber);
     qDebug() << "Tokens added:";
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
@@ -160,6 +165,7 @@ void CodeEditWidget::onTokensAdded(const TokenList& tokens, int lineNumber)
 
 void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
 {
+    Q_UNUSED(lineNumber);
     qDebug() << "Tokens removed:";
     foreach (const Token& token, tokens) {
         qDebug() << "   " << token;
@@ -169,8 +175,6 @@ void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
 void CodeEditWidget::connectSignalsAndSlots()
 {
     connect(textEdit(), SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
-    connect(labelIndexer->tokenizer(), SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
-    connect(labelIndexer->tokenizer(), SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
 }
 
 void CodeEditWidget::setupTextEdit()
@@ -203,8 +207,28 @@ void CodeEditWidget::setupTextEdit()
 void CodeEditWidget::setupIntellisense()
 {
     QTextDocument* doc = textEdit()->document();
+
+    if (labelIndexer && labelIndexer->tokenizer()) {
+        DocumentTokenizer* tokenizer = labelIndexer->tokenizer();
+        disconnect(tokenizer, SIGNAL(tokensAdded(TokenList,int)), this,
+                SLOT(onTokensAdded(TokenList,int)));
+        disconnect(tokenizer, SIGNAL(tokensRemoved(TokenList,int)), this,
+                SLOT(onTokensRemoved(TokenList,int)));
+        delete labelIndexer;
+    }
+    if (highlighter)
+        delete highlighter;
+
     labelIndexer = new DocumentLabelIndex(doc);
     highlighter = new SyntaxHighlighter(doc, labelIndexer);
+
+    if (labelIndexer) {
+        DocumentTokenizer* tokenizer = labelIndexer->tokenizer();
+        connect(tokenizer, SIGNAL(tokensAdded(TokenList,int)), this,
+                SLOT(onTokensAdded(TokenList,int)));
+        connect(tokenizer, SIGNAL(tokensRemoved(TokenList,int)), this,
+                SLOT(onTokensRemoved(TokenList,int)));
+    }
 }
 
 bool CodeEditWidget::maybeSave()

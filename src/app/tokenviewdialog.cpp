@@ -29,7 +29,7 @@
 TokenViewDialog::TokenViewDialog(QWidget* parent, CodeEditWidget* editor) :
     QDialog(parent),
     ui(new Ui::TokenViewDialog),
-    editor(0)
+    editor(NULL)
 {
     ui->setupUi(this);
     ui->listView->setModel(&tokenModel);

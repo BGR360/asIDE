@@ -25,7 +25,7 @@
 #include <QDebug>
 
 DocumentLabelIndex::DocumentLabelIndex(QTextDocument* doc) :
-    mTokenizer(0)
+    mTokenizer(NULL)
 {
     setDocument(doc);
 }
@@ -61,10 +61,14 @@ void DocumentLabelIndex::setDocument(QTextDocument* doc)
     readFromTokenizer();
 
     // Connect the new tokenizer
-    connect(mTokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
-    connect(mTokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
-    connect(mTokenizer, SIGNAL(lineAdded(int)), this, SLOT(onLineAdded(int)));
-    connect(mTokenizer, SIGNAL(lineRemoved(int)), this, SLOT(onLineRemoved(int)));
+    if (mTokenizer) {
+        connect(mTokenizer, SIGNAL(tokensAdded(TokenList,int)), this, SLOT(onTokensAdded(TokenList,int)));
+        connect(mTokenizer, SIGNAL(tokensRemoved(TokenList,int)), this, SLOT(onTokensRemoved(TokenList,int)));
+        connect(mTokenizer, SIGNAL(lineAdded(int)), this, SLOT(onLineAdded(int)));
+        connect(mTokenizer, SIGNAL(lineRemoved(int)), this, SLOT(onLineRemoved(int)));
+    } else {
+        qDebug() << "Could not allocate new DocumentTokenizer";
+    }
 
     emit documentChanged(doc);
 }

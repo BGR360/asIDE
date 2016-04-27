@@ -1,19 +1,32 @@
 #!/bin/bash
-/Users/Ben/Qt/5.6/clang_64/bin/macdeployqt build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app
 
-dylibbundler -od -b -x build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app/Contents/MacOS/asIDE -d build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app/Contents/libs/ -p @executable_path/../libs/ <<< "build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/intellisense"
+if [ "$1" != "Debug" ] && [ "$1" != "Release" ] ; then
+	echo "You must specify either 'Debug' or 'Release'"
+	exit 1
+fi
 
-otool -L build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app/Contents/MacOS/asIDE
+MACDEPLOYQT=/Users/Ben/Qt/5.6/clang_64/bin/macdeployqt
+PATH_TO_APP=build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-$1/src/app/asIDE.app
 
-cp images/app-icon/app.icns build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app/Contents/Resources
+$MACDEPLOYQT $PATH_TO_APP
 
-defaults write /Users/Ben/Documents/QtProjects/asIDE/build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app/Contents/Info.plist CFBundleIconFile -string "app"
+dylibbundler -od -b -x $PATH_TO_APP/Contents/MacOS/asIDE -d $PATH_TO_APP/Contents/libs/ -p @executable_path/../libs/ <<< "build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-$1/src/intellisense"
+
+cp $PATH_TO_APP/../../intellisense/libIntellisense.1.dylib $PATH_TO_APP/Contents/Frameworks/libIntellisense.1.dylib
+
+otool -L $PATH_TO_APP/Contents/MacOS/asIDE
+
+cp images/app-icon/app.icns $PATH_TO_APP/Contents/Resources
+
+defaults write $PATH_TO_APP/Contents/Info.plist CFBundleIconFile -string "app"
 
 mkdir tmp
-cp -r build/build-asIDE-Desktop_Qt_5_6_0_clang_64bit-Release/src/app/asIDE.app tmp
+cp -r $PATH_TO_APP tmp
 
-/Users/Ben/Qt/5.6/clang_64/bin/macdeployqt tmp/asIDE.app -dmg
-mv tmp/asIDE.dmg asIDE.dmg
+if [ "$2" = "-dmg" ] ; then
+	$MACDEPLOYQT tmp/asIDE.app -dmg
+	mv tmp/asIDE.dmg asIDE.dmg
+fi
 
 rm -r tmp/*
 rmdir tmp

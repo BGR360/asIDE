@@ -92,14 +92,18 @@ void LabelViewDialog::onLabelIndexChange()
 
 void LabelViewDialog::updateLabels()
 {
-    DocumentLabelIndex* indexer = editor->labelIndex();
-    QStringList labels = indexer->labels();
-    QStringList::iterator i;
-    for (i = labels.begin(); i != labels.end(); ++i) {
-        QString& label = *i;
-        const int lineNumberOfLabel = indexer->lineNumberOfLabel(label);
-        label.insert(0, QString("%1: ").arg(lineNumberOfLabel));
+    if (editor) {
+        DocumentLabelIndex* indexer = editor->labelIndex();
+        if (indexer) {
+            QStringList labels = indexer->labels();
+            QStringList::iterator i;
+            for (i = labels.begin(); i != labels.end(); ++i) {
+                QString& label = *i;
+                const int lineNumberOfLabel = indexer->lineNumberOfLabel(label);
+                label.insert(0, QString("%1: ").arg(lineNumberOfLabel));
+            }
+            std::sort(labels.begin(), labels.end());
+            labelModel.setStringList(labels);
+        }
     }
-    std::sort(labels.begin(), labels.end());
-    labelModel.setStringList(labels);
 }

@@ -29,7 +29,7 @@
 #include <QTextDocument>
 
 DocumentTokenizer::DocumentTokenizer(QTextDocument* doc) :
-    mDoc(0),
+    mDoc(NULL),
     mCursorPos(0),
     mReceivedLongDocumentChange(false),
     mAwaitingLineCountChange(false)
