@@ -32,8 +32,7 @@
 LabelViewDialog::LabelViewDialog(QWidget* parent, CodeEditWidget* editor) :
     QDialog(parent),
     ui(new Ui::LabelViewDialog),
-    editor(NULL),
-    isShowing(false)
+    editor(NULL)
 {
     ui->setupUi(this);
     ui->listView->setModel(&labelModel);
@@ -45,7 +44,7 @@ LabelViewDialog::LabelViewDialog(QWidget* parent, CodeEditWidget* editor) :
     if (!geometry.isEmpty()) {
         restoreGeometry(geometry);
     }
-    isShowing = settings.value("labelview/isShowing", false).toBool();
+    const bool isShowing = settings.value("labelview/isShowing", false).toBool();
     if (isShowing)
         show();
 }

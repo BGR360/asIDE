@@ -57,7 +57,6 @@ private:
 
     CodeEditWidget* editor;
     QStringListModel tokenModel;
-    bool isShowing;
 };
 
 #endif // TOKENVIEWDIALOG_H

@@ -27,29 +27,33 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QMessageBox>
+#include <QPainter>
 #include <QStringListModel>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QTextStream>
 
+#include "linenumberarea.h"
 #include <syntaxhighlighter.h>
 
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
-    QWidget(parent),
-    ui(new Ui::CodeEditWidget),
+    QPlainTextEdit(parent),
     highlighter(NULL),
     labelIndexer(NULL)
 {
-    ui->setupUi(this);
+    lineNumberArea = new LineNumberArea(this);
 
     setupTextEdit();
     setupIntellisense();
     connectSignalsAndSlots();
+
+    updateLineNumberAreaWidth();
 }
 
 CodeEditWidget::~CodeEditWidget()
 {
-    delete ui;
+    delete lineNumberArea;
+    lineNumberArea = NULL;
     if (labelIndexer)
         delete labelIndexer;
     if (highlighter)
@@ -85,7 +89,7 @@ QString CodeEditWidget::fullFileName() const
 
 QPlainTextEdit* CodeEditWidget::textEdit()
 {
-    return ui->textEdit;
+    return this;
 }
 
 DocumentLabelIndex* CodeEditWidget::labelIndex()
@@ -101,6 +105,33 @@ void CodeEditWidget::setFileName(const QString& fullFileName)
 bool CodeEditWidget::load()
 {
     return loadFile(fileBeingEdited);
+}
+
+void CodeEditWidget::lineNumberAreaPaintEvent(QPaintEvent* event)
+{
+    // This is where we do all the magic of drawing the line numbers
+    QPainter painter(lineNumberArea);
+    painter.fillRect(event->rect(), LineNumberArea::SIDEBAR_COLOR);
+
+    QTextBlock block = firstVisibleBlock();
+    int blockNumber = block.blockNumber();
+    int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom = top + static_cast<int>(blockBoundingRect(block).height());
+
+    while (block.isValid() && top <= event->rect().bottom()) {
+        if (block.isVisible() && bottom >= event->rect().top()) {
+            QString number = QString::number(blockNumber + 1);
+            painter.setPen(LineNumberArea::LINE_NUMBER_COLOR);
+            painter.drawText(0, top, lineNumberArea->width() - LineNumberArea::EXTRA_SPACE_RIGHT,
+                             fontMetrics().height(),
+                             Qt::AlignRight, number);
+        }
+
+        block = block.next();
+        top = bottom;
+        bottom = top + static_cast<int>(blockBoundingRect(block).height());
+        ++blockNumber;
+    }
 }
 
 bool CodeEditWidget::save()
@@ -131,10 +162,17 @@ void CodeEditWidget::closeEvent(QCloseEvent* event)
         event->ignore();
 }
 
+void CodeEditWidget::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    QRect cr = contentsRect();
+    lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberArea->lineNumberAreaWidth(), cr.height()));
+}
+
 void CodeEditWidget::autoIndent()
 {
-    QTextCursor cursor = textEdit()->textCursor();
-    QTextDocument* doc = textEdit()->document();
+    QTextCursor cursor = textCursor();
+    QTextDocument* doc = document();
 
     // Auto-indent if we just started a new line
     if (cursor.atBlockStart()) {
@@ -172,13 +210,36 @@ void CodeEditWidget::onTokensRemoved(const TokenList& tokens, int lineNumber)
     }
 }
 
+void CodeEditWidget::updateLineNumberAreaWidth()
+{
+    setViewportMargins(lineNumberArea->lineNumberAreaWidth(), 0, 0, 0);
+}
+
+void CodeEditWidget::updateLineNumberArea(const QRect& rect, int dy)
+{
+    if (lineNumberArea) {
+        if (dy)
+            lineNumberArea->scroll(0, dy);
+        else
+            lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
+
+        if (rect.contains(viewport()->rect()))
+            updateLineNumberAreaWidth();
+    }
+}
+
 void CodeEditWidget::connectSignalsAndSlots()
 {
-    connect(textEdit(), SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
+    connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
+    connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth()));
+    connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
 }
 
 void CodeEditWidget::setupTextEdit()
 {
+    //setLineWrapMode(QPlainTextEdit::WidgetWidth);
+    //setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+
     // Set the font to a monospace font
     QFont font;
 
@@ -193,20 +254,19 @@ void CodeEditWidget::setupTextEdit()
     font.setStyleHint(QFont::Monospace);
     font.setFixedPitch(true);
     font.setPointSize(FONT_SIZE);
-
-    textEdit()->setFont(font);
+    setFont(font);
 
     // Set the tab width
     QFontMetrics metrics(font);
-    textEdit()->setTabStopWidth(TAB_WIDTH * metrics.width(' '));
+    setTabStopWidth(TAB_WIDTH * metrics.width(' '));
 
     // Set the cursor width
-    textEdit()->setCursorWidth(CURSOR_WIDTH);
+    setCursorWidth(CURSOR_WIDTH);
 }
 
 void CodeEditWidget::setupIntellisense()
 {
-    QTextDocument* doc = textEdit()->document();
+    QTextDocument* doc = document();
 
     if (labelIndexer && labelIndexer->tokenizer()) {
         DocumentTokenizer* tokenizer = labelIndexer->tokenizer();
@@ -233,7 +293,7 @@ void CodeEditWidget::setupIntellisense()
 
 bool CodeEditWidget::maybeSave()
 {
-    if (!textEdit()->document()->isModified())
+    if (!document()->isModified())
         return true;
 
     const QMessageBox::StandardButton ret
@@ -272,21 +332,21 @@ bool CodeEditWidget::saveFile(const QString& fileName)
 #endif
 
     QTextStream out(&file);
-    out << textEdit()->toPlainText();
+    out << toPlainText();
 
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
 
     fileBeingEdited = fileName;
-    textEdit()->document()->setModified(false);
+    document()->setModified(false);
 
     return true;
 }
 
 bool CodeEditWidget::loadFile(const QString& fileName)
 {
-    textEdit()->clear();
+    clear();
 
     if (!fileName.isEmpty()) {
         QFile file(fileName);
@@ -302,7 +362,7 @@ bool CodeEditWidget::loadFile(const QString& fileName)
 #endif
 
         QTextStream in(&file);
-        textEdit()->setPlainText(in.readAll());
+        setPlainText(in.readAll());
         highlighter->rehighlight();
 
 #ifndef QT_NO_CURSOR

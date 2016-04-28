@@ -23,7 +23,7 @@
 #ifndef CODEEDITWIDGET_H
 #define CODEEDITWIDGET_H
 
-#include <QWidget>
+#include <QPlainTextEdit>
 
 QT_BEGIN_NAMESPACE
 class QPlainTextEdit;
@@ -32,11 +32,9 @@ QT_END_NAMESPACE
 
 #include <documentlabelindex.h>
 
-namespace Ui {
-class CodeEditWidget;
-}
+class LineNumberArea;
 
-class CodeEditWidget : public QWidget
+class CodeEditWidget : public QPlainTextEdit
 {
     Q_OBJECT
 
@@ -53,8 +51,9 @@ public:
     DocumentLabelIndex* labelIndex();
 
     void setFileName(const QString& fullFileName);
-
     bool load();
+
+    void lineNumberAreaPaintEvent(QPaintEvent* event);
 
 public slots:
     bool save();
@@ -62,19 +61,21 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
 private slots:
     void autoIndent();
     void onTokensAdded(const TokenList& tokens, int lineNumber);
     void onTokensRemoved(const TokenList& tokens, int lineNumber);
+    void updateLineNumberAreaWidth();
+    void updateLineNumberArea(const QRect& rect, int dy);
 
 private:
     static const int FONT_SIZE = 14;    // in points
     static const int TAB_WIDTH = 8;     // in spaces
     static const int CURSOR_WIDTH = 2;  // in pixels
 
-    Ui::CodeEditWidget* ui;
-
+    LineNumberArea* lineNumberArea;
     QSyntaxHighlighter* highlighter;
     DocumentLabelIndex* labelIndexer;
     QString fileBeingEdited;

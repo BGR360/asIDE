@@ -37,14 +37,16 @@ SOURCES += main.cpp \
     codeeditwidget.cpp \
     labelviewdialog.cpp \
     tokenviewdialog.cpp \
-    instructionviewdialog.cpp
+    instructionviewdialog.cpp \
+    linenumberarea.cpp
 
 HEADERS  += mainwindow.h \
     aseconfigdialog.h \
     codeeditwidget.h \
     labelviewdialog.h \
     tokenviewdialog.h \
-    instructionviewdialog.h
+    instructionviewdialog.h \
+    linenumberarea.h
 
 FORMS    = ../../forms/mainwindow.ui \
     ../../forms/aseconfigdialog.ui \
@@ -61,3 +63,4 @@ INCLUDEPATH += ../intellisense
 
 # Default rules for deployment.
 include(../../deployment.pri)
+

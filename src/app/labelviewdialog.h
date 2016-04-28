@@ -56,7 +56,6 @@ private:
 
     CodeEditWidget* editor;
     QStringListModel labelModel;
-    bool isShowing;
 };
 
 #endif // LABELVIEWDIALOG_H

@@ -31,8 +31,7 @@
 TokenViewDialog::TokenViewDialog(QWidget* parent, CodeEditWidget* editor) :
     QDialog(parent),
     ui(new Ui::TokenViewDialog),
-    editor(NULL),
-    isShowing(false)
+    editor(NULL)
 {
     ui->setupUi(this);
     ui->listView->setModel(&tokenModel);
@@ -44,7 +43,7 @@ TokenViewDialog::TokenViewDialog(QWidget* parent, CodeEditWidget* editor) :
     if (!geometry.isEmpty()) {
         restoreGeometry(geometry);
     }
-    isShowing = settings.value("tokenview/isShowing", false).toBool();
+    const bool isShowing = settings.value("tokenview/isShowing", false).toBool();
     if (isShowing)
         show();
 }
