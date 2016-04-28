@@ -24,6 +24,7 @@
 #include "ui_labelviewdialog.h"
 
 #include <algorithm> // std::sort
+#include <QSettings>
 
 #include "codeeditwidget.h"
 #include <documentlabelindex.h>
@@ -31,16 +32,28 @@
 LabelViewDialog::LabelViewDialog(QWidget* parent, CodeEditWidget* editor) :
     QDialog(parent),
     ui(new Ui::LabelViewDialog),
-    editor(NULL)
+    editor(NULL),
+    isShowing(false)
 {
     ui->setupUi(this);
     ui->listView->setModel(&labelModel);
 
     setEditor(editor);
+
+    QSettings settings;
+    const QByteArray geometry = settings.value("labelview/geometry", QByteArray()).toByteArray();
+    if (!geometry.isEmpty()) {
+        restoreGeometry(geometry);
+    }
+    isShowing = settings.value("labelview/isShowing", false).toBool();
+    if (isShowing)
+        show();
 }
 
 LabelViewDialog::~LabelViewDialog()
 {
+    QSettings settings;
+    settings.setValue("labelview/geometry", saveGeometry());
     delete ui;
 }
 
@@ -82,6 +95,21 @@ void LabelViewDialog::setEditor(CodeEditWidget* newEditor)
     } else {
         labelModel.setStringList(QStringList());
     }
+}
+
+void LabelViewDialog::showEvent(QShowEvent* e)
+{
+    Q_UNUSED(e);
+    QSettings settings;
+    settings.setValue("labelview/isShowing", true);
+    updateLabels();
+}
+
+void LabelViewDialog::closeEvent(QCloseEvent* e)
+{
+    Q_UNUSED(e);
+    QSettings settings;
+    settings.setValue("labelview/isShowing", false);
 }
 
 void LabelViewDialog::onLabelIndexChange()

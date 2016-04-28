@@ -48,10 +48,7 @@ static const QUrl BUG_REPORTING_URL("https://github.com/bgr360/asIDE/issues");
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    currentEditor(NULL),
-    labelViewDialog(new LabelViewDialog(this)),
-    instructionViewDialog(new InstructionViewDialog(this)),
-    tokenViewDialog(new TokenViewDialog(this))
+    currentEditor(NULL)
 {
     ui->setupUi(this);
 
@@ -59,6 +56,10 @@ MainWindow::MainWindow(QWidget* parent) :
     setupActions();
 
     readSettings();
+
+    labelViewDialog = new LabelViewDialog(this);
+    instructionViewDialog = new InstructionViewDialog(this);
+    tokenViewDialog = new TokenViewDialog(this);
 }
 
 MainWindow::~MainWindow()
@@ -434,8 +435,8 @@ void MainWindow::setupActions()
 
 void MainWindow::readSettings()
 {
-    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-    const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
+    QSettings settings;
+    const QByteArray geometry = settings.value("mainwindow/geometry", QByteArray()).toByteArray();
     if (geometry.isEmpty()) {
         const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
         resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
@@ -462,7 +463,7 @@ void MainWindow::readSettings()
 void MainWindow::writeSettings()
 {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-    settings.setValue("geometry", saveGeometry());
+    settings.setValue("mainwindow/geometry", saveGeometry());
     settings.setValue("pathToAse100", pathToAse100);
     settings.setValue("pathToMostRecentFile", pathToMostRecentFile);
 }

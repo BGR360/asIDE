@@ -43,6 +43,10 @@ public:
     CodeEditWidget* codeEditor();
     void setEditor(CodeEditWidget* newEditor);
 
+protected:
+    void showEvent(QShowEvent* e) Q_DECL_OVERRIDE;
+    void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
+
 private slots:
     void onLabelIndexChange();
     void updateLabels();
@@ -52,6 +56,7 @@ private:
 
     CodeEditWidget* editor;
     QStringListModel labelModel;
+    bool isShowing;
 };
 
 #endif // LABELVIEWDIALOG_H

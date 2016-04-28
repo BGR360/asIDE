@@ -33,8 +33,11 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Ben Reeves");
     QCoreApplication::setApplicationName("asIDE");
     QCoreApplication::setApplicationVersion("1.0.0");
+
     QCommandLineParser parser;
-    parser.setApplicationDescription(QCoreApplication::applicationName());
+    parser.setApplicationDescription(QCoreApplication::applicationName() +
+                                     QString(" version ") +
+                                     QCoreApplication::applicationVersion());
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addPositionalArgument("file", "The file to open.");
@@ -44,5 +47,6 @@ int main(int argc, char *argv[])
     if (!parser.positionalArguments().isEmpty())
         mainWin.loadFile(parser.positionalArguments().first());
     mainWin.show();
+
     return app.exec();
 }

@@ -23,22 +23,36 @@
 #include "tokenviewdialog.h"
 #include "ui_tokenviewdialog.h"
 
+#include <QSettings>
+
 #include "codeeditwidget.h"
 #include <documenttokenizer.h>
 
 TokenViewDialog::TokenViewDialog(QWidget* parent, CodeEditWidget* editor) :
     QDialog(parent),
     ui(new Ui::TokenViewDialog),
-    editor(NULL)
+    editor(NULL),
+    isShowing(false)
 {
     ui->setupUi(this);
     ui->listView->setModel(&tokenModel);
 
     setEditor(editor);
+
+    QSettings settings;
+    const QByteArray geometry = settings.value("tokenview/geometry", QByteArray()).toByteArray();
+    if (!geometry.isEmpty()) {
+        restoreGeometry(geometry);
+    }
+    isShowing = settings.value("tokenview/isShowing", false).toBool();
+    if (isShowing)
+        show();
 }
 
 TokenViewDialog::~TokenViewDialog()
 {
+    QSettings settings;
+    settings.setValue("tokenview/geometry", saveGeometry());
     delete ui;
 }
 
@@ -78,6 +92,21 @@ void TokenViewDialog::setEditor(CodeEditWidget* newEditor)
     }
 }
 
+void TokenViewDialog::showEvent(QShowEvent* e)
+{
+    Q_UNUSED(e);
+    QSettings settings;
+    settings.setValue("tokenview/isShowing", true);
+    updateTokens();
+}
+
+void TokenViewDialog::closeEvent(QCloseEvent* e)
+{
+    Q_UNUSED(e);
+    QSettings settings;
+    settings.setValue("tokenview/isShowing", false);
+}
+
 void TokenViewDialog::onTokensAdded()
 {
     if (isVisible())
@@ -92,14 +121,21 @@ void TokenViewDialog::onTokensRemoved()
 
 void TokenViewDialog::updateTokens()
 {
-    QStringList tokenStrings;
-    DocumentTokenizer* tokenizer = editor->labelIndex()->tokenizer();
-    for (int i = 0; i < tokenizer->numLines(); ++i) {
-        TokenList tokensInLine = tokenizer->tokensInLine(i);
-        foreach (const Token& token, tokensInLine) {
-            QString tokenString = QString("%1: %2: %3").arg(i).arg(Token::TYPE_NAMES[token.type]).arg(token.value);
-            tokenStrings.append(tokenString);
+    if (editor) {
+        QStringList tokenStrings;
+        DocumentLabelIndex* labelIndex = editor->labelIndex();
+        if (labelIndex) {
+            DocumentTokenizer* tokenizer = labelIndex->tokenizer();
+            if (tokenizer) {
+                for (int i = 0; i < tokenizer->numLines(); ++i) {
+                    TokenList tokensInLine = tokenizer->tokensInLine(i);
+                    foreach (const Token& token, tokensInLine) {
+                        QString tokenString = QString("%1: %2: %3").arg(i).arg(Token::TYPE_NAMES[token.type]).arg(token.value);
+                        tokenStrings.append(tokenString);
+                    }
+                }
+                tokenModel.setStringList(tokenStrings);
+            }
         }
     }
-    tokenModel.setStringList(tokenStrings);
 }

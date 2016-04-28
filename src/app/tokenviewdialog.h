@@ -43,6 +43,10 @@ public:
     CodeEditWidget* codeEditor();
     void setEditor(CodeEditWidget* newEditor);
 
+protected:
+    void showEvent(QShowEvent* e) Q_DECL_OVERRIDE;
+    void closeEvent(QCloseEvent* e) Q_DECL_OVERRIDE;
+
 private slots:
     void onTokensAdded();
     void onTokensRemoved();
@@ -53,6 +57,7 @@ private:
 
     CodeEditWidget* editor;
     QStringListModel tokenModel;
+    bool isShowing;
 };
 
 #endif // TOKENVIEWDIALOG_H
