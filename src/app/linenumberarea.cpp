@@ -6,7 +6,8 @@
 #include "codeeditwidget.h"
 
 const QColor LineNumberArea::SIDEBAR_COLOR = QColor::fromRgb(235, 235, 235);
-const QColor LineNumberArea::LINE_NUMBER_COLOR = QColor::fromRgb(120, 120, 120);
+const QColor LineNumberArea::LINE_NUMBER_COLOR = QColor::fromRgb(170, 170, 170);
+const QColor LineNumberArea::LINE_NUMBER_HIGHLIGHTED_COLOR = QColor::fromRgb(80, 80, 80);
 
 LineNumberArea::LineNumberArea(CodeEditWidget* codeEdit) :
     QWidget(codeEdit->textEdit()),

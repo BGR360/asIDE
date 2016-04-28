@@ -58,6 +58,7 @@ public:
 public slots:
     bool save();
     bool saveAs();
+    void highlightLines(int startLine, int endLine);
 
 protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
@@ -69,6 +70,7 @@ private slots:
     void onTokensRemoved(const TokenList& tokens, int lineNumber);
     void updateLineNumberAreaWidth();
     void updateLineNumberArea(const QRect& rect, int dy);
+    void highlightCurrentLine();
 
 private:
     static const int FONT_SIZE = 14;    // in points
@@ -79,6 +81,8 @@ private:
     QSyntaxHighlighter* highlighter;
     DocumentLabelIndex* labelIndexer;
     QString fileBeingEdited;
+    int firstSelectedLine;
+    int lastSelectedLine;
 
     void connectSignalsAndSlots();
     void setupTextEdit();

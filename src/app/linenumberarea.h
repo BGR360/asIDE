@@ -19,6 +19,7 @@ public:
     static const int EXTRA_SPACE_RIGHT = 15;
     static const QColor SIDEBAR_COLOR;
     static const QColor LINE_NUMBER_COLOR;
+    static const QColor LINE_NUMBER_HIGHLIGHTED_COLOR;
 
 protected:
     void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;

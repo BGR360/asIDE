@@ -39,7 +39,9 @@
 CodeEditWidget::CodeEditWidget(QWidget* parent) :
     QPlainTextEdit(parent),
     highlighter(NULL),
-    labelIndexer(NULL)
+    labelIndexer(NULL),
+    firstSelectedLine(0),
+    lastSelectedLine(0)
 {
     lineNumberArea = new LineNumberArea(this);
 
@@ -121,7 +123,10 @@ void CodeEditWidget::lineNumberAreaPaintEvent(QPaintEvent* event)
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
             QString number = QString::number(blockNumber + 1);
-            painter.setPen(LineNumberArea::LINE_NUMBER_COLOR);
+            if (blockNumber >= firstSelectedLine && blockNumber <= lastSelectedLine)
+                painter.setPen(LineNumberArea::LINE_NUMBER_HIGHLIGHTED_COLOR);
+            else
+                painter.setPen(LineNumberArea::LINE_NUMBER_COLOR);
             painter.drawText(0, top, lineNumberArea->width() - LineNumberArea::EXTRA_SPACE_RIGHT,
                              fontMetrics().height(),
                              Qt::AlignRight, number);
@@ -154,6 +159,18 @@ bool CodeEditWidget::saveAs()
     return saveFile(dialog.selectedFiles().first());
 }
 
+void CodeEditWidget::highlightLines(int startLine, int endLine)
+{
+    QTextCursor selectionStart(document()->findBlockByNumber(startLine));
+    QTextCursor selectionEnd(document()->findBlockByNumber(endLine));
+    selectionEnd.setPosition(selectionEnd.block().position() + selectionEnd.block().length());
+
+    QTextCursor selection = textCursor();
+    selection.setPosition(selectionStart.position());
+    selection.setPosition(selectionEnd.position(), QTextCursor::KeepAnchor);
+    setTextCursor(selection);
+}
+
 void CodeEditWidget::closeEvent(QCloseEvent* event)
 {
     if (maybeSave())
@@ -164,7 +181,7 @@ void CodeEditWidget::closeEvent(QCloseEvent* event)
 
 void CodeEditWidget::resizeEvent(QResizeEvent* event)
 {
-    QWidget::resizeEvent(event);
+    QPlainTextEdit::resizeEvent(event);
     QRect cr = contentsRect();
     lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberArea->lineNumberAreaWidth(), cr.height()));
 }
@@ -228,17 +245,35 @@ void CodeEditWidget::updateLineNumberArea(const QRect& rect, int dy)
     }
 }
 
+void CodeEditWidget::highlightCurrentLine()
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.hasSelection()) {
+        QTextCursor selectionBegin = cursor;
+        QTextCursor selectionEnd = cursor;
+        selectionBegin.setPosition(cursor.selectionStart());
+        selectionEnd.setPosition(cursor.selectionEnd() - 1);
+        firstSelectedLine = selectionBegin.block().blockNumber();
+        lastSelectedLine = selectionEnd.block().blockNumber();
+    } else {
+        firstSelectedLine = lastSelectedLine = cursor.block().blockNumber();
+    }
+    update();
+}
+
 void CodeEditWidget::connectSignalsAndSlots()
 {
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(autoIndent()));
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth()));
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
+    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
+    connect(this, SIGNAL(selectionChanged()), this, SLOT(highlightCurrentLine()));
 }
 
 void CodeEditWidget::setupTextEdit()
 {
-    //setLineWrapMode(QPlainTextEdit::WidgetWidth);
-    //setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+    setLineWrapMode(QPlainTextEdit::NoWrap);
+    setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
     // Set the font to a monospace font
     QFont font;
