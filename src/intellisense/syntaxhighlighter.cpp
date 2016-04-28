@@ -40,10 +40,13 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
     //labelExpression = QRegExp("^[A-Za-z]\\w*\\s");
     labelExpression = Token::REGEX[Token::Label];
 
+    // Create a highlighting format for E100 label declarations
+    labelDeclarationFormat.setForeground(Qt::darkRed);
+    labelDeclarationFormat.setFontItalic(true);
+    labelDeclarationFormat.setFontWeight(QFont::DemiBold);
+
     // Create a highlighting format for E100 labels that mark instructions
-    functionLabelFormat.setForeground(Qt::darkRed);
-    functionLabelFormat.setFontItalic(true);
-    functionLabelFormat.setFontWeight(QFont::DemiBold);
+    functionLabelFormat = labelDeclarationFormat;
 
     // Create a highlighting format for E100 labels that are variables
     variableLabelFormat.setFontItalic(false);
@@ -87,7 +90,8 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent, DocumentLabelIndex* 
 
 void SyntaxHighlighter::highlightBlock(const QString& text)
 {
-    qDebug() << "highlighting line" << currentBlock().blockNumber();
+    const int currentLineNumber = currentBlock().blockNumber();
+    qDebug() << "highlighting line" << currentLineNumber;
 
     // First, utilize the DocumentLabelIndex to highlight labels
     int index = labelExpression.indexIn(text);
@@ -98,6 +102,8 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
         QString matchedLabel = text.mid(index, length);
         if (!isValidLabel(matchedLabel))
             setFormat(index, length, badLabelFormat);
+        else if (isLabelDeclaration(matchedLabel, currentLineNumber))
+            setFormat(index, length, labelDeclarationFormat);
         else if (isFunctionLabel(matchedLabel))
             setFormat(index, length, functionLabelFormat);
         else if (isVariableLabel(matchedLabel))
@@ -124,42 +130,27 @@ bool SyntaxHighlighter::isValidLabel(const QString& label) const
     qDebug() << "Checking for label:" << label;
     if (!labelIndexer)
         return true;
-    if (!labelIndexer->hasLabel(label))
-        return false;
-    return true;
+    return labelIndexer->hasLabel(label);
 }
 
-Token SyntaxHighlighter::getStuffAfterLabel(const QString& label) const
+bool SyntaxHighlighter::isLabelDeclaration(const QString& label, int line) const
 {
-    Token defaultToken = {QString(), Token::Unrecognized};
-
-    const DocumentTokenizer* tokenizer = labelIndexer->tokenizer();
-    const TokenList tokensInDeclarationLine = tokenizer->tokensInLine(labelIndexer->lineNumberOfLabel(label));
-    Token searchToken = {label, Token::Label};
-    const int indexOfLabelInLine = tokensInDeclarationLine.indexOf(searchToken);
-    if (indexOfLabelInLine == -1 || tokensInDeclarationLine.size() < indexOfLabelInLine + 2)
-        return defaultToken;
-
-    return tokensInDeclarationLine.at(indexOfLabelInLine + 1);
+    if (!labelIndexer)
+        return false;
+    return labelIndexer->lineNumberOfLabel(label) == line;
 }
 
 bool SyntaxHighlighter::isFunctionLabel(const QString& label) const
 {
-    if (!isValidLabel(label))
+    if (!labelIndexer)
         return false;
-    Token stuffAfterLabel = getStuffAfterLabel(label);
-    return stuffAfterLabel.type == Token::Instruction
-            || stuffAfterLabel.type == Token::Newline;
+    return labelIndexer->isFunctionLabel(label);
 }
 
 bool SyntaxHighlighter::isVariableLabel(const QString& label) const
 {
-    if (!isValidLabel(label))
+    if (!labelIndexer)
         return false;
-    Token stuffAfterLabel = getStuffAfterLabel(label);
-    return stuffAfterLabel.type == Token::IntLiteral
-            || stuffAfterLabel.type == Token::CharLiteral
-            || (stuffAfterLabel.type == Token::Label &&
-                stuffAfterLabel.value != label && isVariableLabel(stuffAfterLabel.value));
+    return labelIndexer->isVariableLabel(label);
 }
 

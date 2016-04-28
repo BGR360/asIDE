@@ -55,6 +55,7 @@ private:
     };
     QVector<HighlightingRule> highlightingRules;
 
+    QTextCharFormat labelDeclarationFormat;
     QTextCharFormat functionLabelFormat;
     QTextCharFormat variableLabelFormat;
     QTextCharFormat badLabelFormat;
@@ -69,7 +70,7 @@ private:
     QTextCharFormat numberFormat;
 
     bool isValidLabel(const QString& label) const;
-    Token getStuffAfterLabel(const QString& label) const;
+    bool isLabelDeclaration(const QString& label, int line) const;
     bool isFunctionLabel(const QString& label) const;
     bool isVariableLabel(const QString& label) const;
 };

@@ -85,8 +85,8 @@ bool DocumentLabelIndex::hasLabel(const QString& label) const
 
 bool DocumentLabelIndex::hasLabelAtLine(int line) const
 {
-    foreach (int l, mLinesByLabel) {
-        if (l == line)
+    foreach (LabelInfo l, mLinesByLabel) {
+        if (l.lineNumber == line)
             return true;
     }
     return false;
@@ -98,22 +98,35 @@ bool DocumentLabelIndex::hasLabelAtLine(const QString& label, int line) const
         return false;
     if (!hasLabelAtLine(line))
         return false;
-    return mLinesByLabel[label] == line;
+    return mLinesByLabel[label].lineNumber == line;
+}
+
+bool DocumentLabelIndex::isFunctionLabel(const QString& label) const
+{
+    if (!hasLabel(label))
+        return false;
+    return mLinesByLabel[label].type == FunctionLabel;
+}
+
+bool DocumentLabelIndex::isVariableLabel(const QString& label) const
+{
+    if (!hasLabel(label))
+        return false;
+    return mLinesByLabel[label].type == VariableLabel;
 }
 
 int DocumentLabelIndex::lineNumberOfLabel(const QString& label) const
 {
     if (!hasLabel(label))
         return -1;
-    return mLinesByLabel[label];
+    return mLinesByLabel[label].lineNumber;
 }
 
 QString DocumentLabelIndex::labelAtLine(int line) const
 {
-    QString label;
-    QMap<QString, int>::const_iterator i;
+    QMap<QString, LabelInfo>::const_iterator i;
     for (i = mLinesByLabel.begin(); i != mLinesByLabel.end(); ++i) {
-        if (i.value() == line)
+        if (i.value().lineNumber == line)
             return i.key();
     }
     return QString();
@@ -122,7 +135,7 @@ QString DocumentLabelIndex::labelAtLine(int line) const
 QList<QString> DocumentLabelIndex::labels() const
 {
     QList<QString> labels;
-    QMap<QString, int>::const_iterator i;
+    QMap<QString, LabelInfo>::const_iterator i;
     for (i = mLinesByLabel.constBegin(); i != mLinesByLabel.constEnd(); ++i) {
         labels.push_back(i.key());
     }
@@ -139,30 +152,31 @@ void DocumentLabelIndex::readFromTokenizer()
     if (mTokenizer) {
         const int numLines = mTokenizer->numLines();
         for (int i = 0; i < numLines; ++i) {
-            const TokenList& tokensInLine = mTokenizer->tokensInLine(i);
-            if (!tokensInLine.empty()) {
-                QString labelInLine = readLabelsFromLine(tokensInLine);
-                if (!labelInLine.isEmpty())
-                    addLabel(labelInLine, i);
-            }
+            readLabelsFromLine(mTokenizer->tokensInLine(i), i);
         }
     }
 }
 
-QString DocumentLabelIndex::readLabelsFromLine(const TokenList& tokensInLine)
+void DocumentLabelIndex::readLabelsFromLine(const TokenList& tokensInLine, int line)
 {
-    if (tokensInLine.size() > 0) {
-        const Token& firstToken = tokensInLine.at(0);
+    if (!tokensInLine.empty()) {
+        Token firstToken = tokensInLine.first();
         if (firstToken.type == Token::Label) {
-            return firstToken.value;
-        } else {
-            return QString();
+            QString newLabel = firstToken.value;
+            LabelInfo newLabelInfo = {line, VariableLabel};
+
+            if (tokensInLine.size() >= 2) {
+                Token secondToken = tokensInLine.at(1);
+                if (secondToken.type == Token::Instruction)
+                    newLabelInfo.type = FunctionLabel;
+            }
+
+            addLabel(newLabel, newLabelInfo.lineNumber, newLabelInfo.type);
         }
     }
-    return QString();
 }
 
-void DocumentLabelIndex::addLabel(const QString& label, int line)
+void DocumentLabelIndex::addLabel(const QString& label, int line, LabelType type)
 {
     qDebug() << "adding label:" << label << "at line:" << line;
 
@@ -171,7 +185,8 @@ void DocumentLabelIndex::addLabel(const QString& label, int line)
         return;
 
     // Add this label to our data structures
-    mLinesByLabel[label] = line;
+    LabelInfo newLabelInfo = {line, type};
+    mLinesByLabel[label] = newLabelInfo;
 
     emit labelAdded(label, line);
 }
@@ -194,14 +209,8 @@ void DocumentLabelIndex::removeLabel(const QString& label, int line)
 
 void DocumentLabelIndex::onTokensAdded(const TokenList& tokens, int line)
 {
-    // IMPORTANT: tokens is NOT guaranteed to be in order
-    // So we must look at the first token in the tokenizer's line, and see if tokens
-    // CONTAINS that label
-    QString labelInLine = readLabelsFromLine(mTokenizer->tokensInLine(line));
-    Token searchToken = {labelInLine, Token::Label};
-    const int indexOfLabelInTokens = tokens.indexOf(searchToken);
-    if (indexOfLabelInTokens >= 0)
-        addLabel(labelInLine, line);
+    Q_UNUSED(tokens);
+    readLabelsFromLine(mTokenizer->tokensInLine(line), line);
 }
 
 void DocumentLabelIndex::onTokensRemoved(const TokenList& tokens, int line)
@@ -222,7 +231,7 @@ void DocumentLabelIndex::onLineAdded(int afterLine)
         if (hasLabelAtLine(i)) {
             // Shift the label one line up
             QString label = labelAtLine(i);
-            mLinesByLabel[label] += 1;
+            mLinesByLabel[label].lineNumber += 1;
         }
     }
     emit lineAdded(afterLine);
@@ -233,13 +242,12 @@ void DocumentLabelIndex::onLineRemoved(int lineNumber)
     // The last line that we used to have should be one after the actual last line
     const int lastLine = tokenizer()->numLines();
     qDebug() << "Shifting labels backward after line" << lineNumber - 1 << "until line" << lastLine;
-    qDebug() << mLinesByLabel;
     for (int i = lineNumber + 1; i <= lastLine; ++i) {
         if (hasLabelAtLine(i)) {
             // Shift the label one line down
             QString label = labelAtLine(i);
             qDebug() << "shifting" << label << "down from line" << i << "to line" << i - 1;
-            mLinesByLabel[label] -= 1;
+            mLinesByLabel[label].lineNumber -= 1;
         }
     }
     emit lineRemoved(lineNumber);

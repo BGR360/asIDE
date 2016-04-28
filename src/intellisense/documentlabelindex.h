@@ -52,9 +52,16 @@ public:
     bool hasLabel(const QString& label) const;
     bool hasLabelAtLine(int line) const;
     bool hasLabelAtLine(const QString& label, int line) const;
+    bool isFunctionLabel(const QString& label) const;
+    bool isVariableLabel(const QString& label) const;
     int lineNumberOfLabel(const QString& label) const;
     QString labelAtLine(int line) const;
     QList<QString> labels() const;
+
+    enum LabelType {
+        FunctionLabel,
+        VariableLabel
+    };
 
 signals:
     void documentChanged(QTextDocument* newDocument);
@@ -66,8 +73,8 @@ signals:
 protected:
     void reset();
     void readFromTokenizer();
-    QString readLabelsFromLine(const TokenList& tokensInLine);
-    void addLabel(const QString& label, int line);
+    void readLabelsFromLine(const TokenList& tokensInLine, int line);
+    void addLabel(const QString& label, int line, LabelType type = VariableLabel);
     void removeLabel(const QString& label, int line);
 
 private slots:
@@ -79,7 +86,12 @@ private slots:
 private:
     DocumentTokenizer* mTokenizer;
 
-    QMap<QString, int> mLinesByLabel;
+    struct LabelInfo {
+        int lineNumber;
+        LabelType type;
+    };
+
+    QMap<QString, LabelInfo> mLinesByLabel;
 };
 
 #endif // DOCUMENTLABELINDEX_H
