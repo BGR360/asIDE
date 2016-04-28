@@ -1,19 +1,15 @@
 #include "autocompleter.h"
 
-Autocompleter::Autocompleter(QObject* parent) :
-    QCompleter(parent)
-{
+#include <autocompletermodel.h>
 
+Autocompleter::Autocompleter(DocumentLabelIndex* labelIndex, QObject* parent) :
+    QCompleter(parent),
+    model(new AutocompleterModel(labelIndex, this))
+{
+    setModel(model);
 }
 
-Autocompleter::Autocompleter(QAbstractItemModel* model, QObject* parent) :
-    QCompleter(model, parent)
+Autocompleter::~Autocompleter()
 {
-
-}
-
-Autocompleter::Autocompleter(const QStringList& list, QObject* parent) :
-    QCompleter(list, parent)
-{
-
+    delete model;
 }

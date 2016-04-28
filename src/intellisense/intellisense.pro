@@ -28,13 +28,15 @@ DEFINES += INTELLISENSE_LIBRARY
 SOURCES += syntaxhighlighter.cpp \
     documenttokenizer.cpp \
     token.cpp \
-    documentlabelindex.cpp
+    documentlabelindex.cpp \
+    autocompletermodel.cpp
 
 HEADERS += syntaxhighlighter.h \ 
     documenttokenizer.h \
     token.h \
     intellisense_global.h \
-    documentlabelindex.h
+    documentlabelindex.h \
+    autocompletermodel.h
 
 unix {
     target.path = /usr/lib

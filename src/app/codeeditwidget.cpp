@@ -198,40 +198,43 @@ void CodeEditWidget::keyPressEvent(QKeyEvent* event)
 {
     if (autocompleter && autocompleter->popup()->isVisible()) {
         // The following keys are forwarded by the completer to the widget
-       switch (event->key()) {
-       case Qt::Key_Enter:
-       case Qt::Key_Return:
-       case Qt::Key_Escape:
-       case Qt::Key_Tab:
-       case Qt::Key_Backtab:
+        switch (event->key()) {
+        case Qt::Key_Enter:
+        case Qt::Key_Return:
+        case Qt::Key_Escape:
+        case Qt::Key_Backtab:
             event->ignore();
             return; // let the completer do default behavior
-       default:
+        default:
            break;
-       }
+        }
     }
 
-    bool isShortcut = ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_Space); // CTRL+SPACE
+    bool isShortcut = ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_Return); // CTRL+ENTER
     if (!autocompleter || !isShortcut) // do not process the shortcut when we have a completer
         QPlainTextEdit::keyPressEvent(event);
 
     const bool ctrlOrShift = event->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier);
-        if (!autocompleter || (ctrlOrShift && event->text().isEmpty()))
-            return;
+    if (!isShortcut && (!autocompleter || (ctrlOrShift && event->text().isEmpty())))
+        return;
 
-    static QString eow("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-="); // end of word
+    static QString eow("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-= \t"); // end of word
     bool hasModifier = (event->modifiers() != Qt::NoModifier) && !ctrlOrShift;
     QString completionPrefix = textUnderCursor();
 
-    if (!isShortcut && (hasModifier || event->text().isEmpty()|| completionPrefix.length() < 3
-                      || eow.contains(event->text().right(1)))) {
+    if (!isShortcut && (hasModifier || event->text().isEmpty() || completionPrefix.length() < 2
+                        || eow.contains(event->text().right(1))
+                        || autocompleter->currentCompletion() == completionPrefix)) {
         autocompleter->popup()->hide();
         return;
     }
 
     if (completionPrefix != autocompleter->completionPrefix()) {
         autocompleter->setCompletionPrefix(completionPrefix);
-        autocompleter->popup()->setCurrentIndex(autocompleter->completionModel()->index(0, 0));
+        QModelIndex firstIndex = autocompleter->completionModel()->index(0, 0);
+        autocompleter->popup()->setCurrentIndex(firstIndex);
+        if (autocompleter->completionModel()->data(firstIndex) == completionPrefix)
+            return;
     }
     QRect cr = cursorRect();
     cr.setWidth(autocompleter->popup()->sizeHintForColumn(0)
@@ -318,12 +321,15 @@ void CodeEditWidget::insertCompletion(const QString& completion)
 {
     if (autocompleter->widget() != this)
         return;
-    QTextCursor tc = textCursor();
+    /*QTextCursor tc = textCursor();
     int extra = completion.length() - autocompleter->completionPrefix().length();
     tc.movePosition(QTextCursor::Left);
     tc.movePosition(QTextCursor::EndOfWord);
     tc.insertText(completion.right(extra));
-    setTextCursor(tc);
+    setTextCursor(tc);*/
+    QTextCursor tc = textCursor();
+    tc.select(QTextCursor::WordUnderCursor);
+    tc.insertText(completion);
 }
 
 void CodeEditWidget::connectSignalsAndSlots()
@@ -370,11 +376,7 @@ void CodeEditWidget::setupIntellisense()
 
     labelIndexer = new DocumentLabelIndex(doc);
     highlighter = new SyntaxHighlighter(doc, labelIndexer);
-    autocompleter = new Autocompleter({
-                                          "Hello",
-                                          "World"
-                                      },
-                                      this);
+    autocompleter = new Autocompleter(labelIndexer, this);
 
     if (labelIndexer) {
         DocumentTokenizer* tokenizer = labelIndexer->tokenizer();

@@ -3,13 +3,17 @@
 
 #include <QCompleter>
 
+class DocumentLabelIndex;
+
 class Autocompleter : public QCompleter
 {
     Q_OBJECT
 public:
-    explicit Autocompleter(QObject* parent = 0);
-    explicit Autocompleter(QAbstractItemModel* model, QObject* parent = NULL);
-    explicit Autocompleter(const QStringList& list, QObject* parent = NULL);
+    explicit Autocompleter(DocumentLabelIndex* labelIndex, QObject* parent = 0);
+    ~Autocompleter();
+
+private:
+    QAbstractItemModel* model;
 };
 
 #endif // AUTOCOMPLETER_H
