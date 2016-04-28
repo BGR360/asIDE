@@ -26,6 +26,7 @@
 #include <QPlainTextEdit>
 
 QT_BEGIN_NAMESPACE
+class QCompleter;
 class QPlainTextEdit;
 class QSyntaxHighlighter;
 QT_END_NAMESPACE
@@ -49,6 +50,7 @@ public:
 
     QPlainTextEdit* textEdit();
     DocumentLabelIndex* labelIndex();
+    QCompleter* completer() const;
 
     void setFileName(const QString& fullFileName);
     bool load();
@@ -63,6 +65,7 @@ public slots:
 protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
     void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
 
 private slots:
     void autoIndent();
@@ -71,6 +74,7 @@ private slots:
     void updateLineNumberAreaWidth();
     void updateLineNumberArea(const QRect& rect, int dy);
     void highlightCurrentLine();
+    void insertCompletion(const QString &completion);
 
 private:
     static const int FONT_SIZE = 14;    // in points
@@ -80,6 +84,7 @@ private:
     LineNumberArea* lineNumberArea;
     QSyntaxHighlighter* highlighter;
     DocumentLabelIndex* labelIndexer;
+    QCompleter* autocompleter;
     QString fileBeingEdited;
     int firstSelectedLine;
     int lastSelectedLine;
@@ -91,6 +96,7 @@ private:
     bool maybeSave();
     bool saveFile(const QString& fileName);
     bool loadFile(const QString& fileName);
+    QString textUnderCursor() const;
 };
 
 #endif // CODEEDITWIDGET_H

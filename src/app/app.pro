@@ -38,7 +38,8 @@ SOURCES += main.cpp \
     labelviewdialog.cpp \
     tokenviewdialog.cpp \
     instructionviewdialog.cpp \
-    linenumberarea.cpp
+    linenumberarea.cpp \
+    autocompleter.cpp
 
 HEADERS  += mainwindow.h \
     aseconfigdialog.h \
@@ -46,7 +47,8 @@ HEADERS  += mainwindow.h \
     labelviewdialog.h \
     tokenviewdialog.h \
     instructionviewdialog.h \
-    linenumberarea.h
+    linenumberarea.h \
+    autocompleter.h
 
 FORMS    = ../../forms/mainwindow.ui \
     ../../forms/aseconfigdialog.ui \
