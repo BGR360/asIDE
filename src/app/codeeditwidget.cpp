@@ -321,12 +321,6 @@ void CodeEditWidget::insertCompletion(const QString& completion)
 {
     if (autocompleter->widget() != this)
         return;
-    /*QTextCursor tc = textCursor();
-    int extra = completion.length() - autocompleter->completionPrefix().length();
-    tc.movePosition(QTextCursor::Left);
-    tc.movePosition(QTextCursor::EndOfWord);
-    tc.insertText(completion.right(extra));
-    setTextCursor(tc);*/
     QTextCursor tc = textCursor();
     tc.select(QTextCursor::WordUnderCursor);
     tc.insertText(completion);
@@ -388,6 +382,7 @@ void CodeEditWidget::setupIntellisense()
 
     if (autocompleter) {
         autocompleter->setWidget(this);
+        autocompleter->popup()->setFont(font());
         autocompleter->setCompletionMode(QCompleter::PopupCompletion);
         autocompleter->setCaseSensitivity(Qt::CaseInsensitive);
         connect(autocompleter, SIGNAL(activated(QString)),

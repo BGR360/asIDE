@@ -44,6 +44,9 @@
 #include "tokenviewdialog.h"
 
 static const QUrl BUG_REPORTING_URL("https://github.com/bgr360/asIDE/issues");
+static const QUrl REDDIT_URL("https://reddit.com");
+static const QUrl NIC_CAGE_URL("https://placecage.com");
+static const QUrl CATS_URL("https://reddit.com/r/babybigcatgifs");
 
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
@@ -359,10 +362,11 @@ void MainWindow::viewInstructions()
 void MainWindow::about()
 {
     QFile aboutHtml(":/html/about.html");
-    QString aboutHtmlString = "Developed by: Ben Reeves<br/>"
-                              "<p>Copyright (c) 2016 Benjamin Reeves</p>";
+    QString aboutHtmlString = QString("%1 - %2")
+            .arg(QApplication::applicationName())
+            .arg(QApplication::applicationVersion());
     if (aboutHtml.open(QIODevice::ReadOnly | QIODevice::Text))
-        aboutHtmlString = aboutHtml.readAll();
+        aboutHtmlString.append(aboutHtml.readAll());
     else
         qDebug() << "Could not open about.html";
     QMessageBox::about(this, tr("About ase100"), aboutHtmlString);
@@ -371,6 +375,30 @@ void MainWindow::about()
 void MainWindow::reportBug()
 {
     QDesktopServices::openUrl(BUG_REPORTING_URL);
+}
+
+void MainWindow::complain()
+{
+    QMessageBox::warning(this, "No", "Don't do that. Nobody likes a whiner", QMessageBox::Ok);
+}
+
+void MainWindow::imBored()
+{
+    QDesktopServices::openUrl(REDDIT_URL);
+}
+
+void MainWindow::imLonely()
+{
+    int randWidth = qrand() % 800 + 100;
+    int randHeight = qrand() % 800 + 150;
+    QString dimensions = QString("/%1/%2").arg(randWidth).arg(randHeight);
+    QString lonelyUrl = NIC_CAGE_URL.toString().append(dimensions);
+    QDesktopServices::openUrl(QUrl(lonelyUrl));
+}
+
+void MainWindow::pickMeUp()
+{
+    QDesktopServices::openUrl(CATS_URL);
 }
 
 void MainWindow::onModifyCurrentFile()
@@ -400,6 +428,11 @@ void MainWindow::connectSignalsAndSlots()
 
     connect(ui->actionAbout, SIGNAL(triggered(bool)), this, SLOT(about()));
     connect(ui->actionReportBug, SIGNAL(triggered(bool)), this, SLOT(reportBug()));
+    connect(ui->actionRequestFeature, SIGNAL(triggered(bool)), this, SLOT(reportBug()));
+    connect(ui->actionComplain, SIGNAL(triggered(bool)), this, SLOT(complain()));
+    connect(ui->actionBored, SIGNAL(triggered(bool)), this, SLOT(imBored()));
+    connect(ui->actionLonely, SIGNAL(triggered(bool)), this, SLOT(imLonely()));
+    connect(ui->actionPickMeUp, SIGNAL(triggered(bool)), this, SLOT(pickMeUp()));
 
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabSwitched(int)));

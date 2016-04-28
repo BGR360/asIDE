@@ -71,6 +71,10 @@ private slots:
 
     void about();
     void reportBug();
+    void complain();
+    void imBored();
+    void imLonely();
+    void pickMeUp();
 
     void onModifyCurrentFile();
 

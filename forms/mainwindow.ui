@@ -100,6 +100,12 @@
     <addaction name="actionAbout"/>
     <addaction name="separator"/>
     <addaction name="actionReportBug"/>
+    <addaction name="actionRequestFeature"/>
+    <addaction name="actionComplain"/>
+    <addaction name="separator"/>
+    <addaction name="actionBored"/>
+    <addaction name="actionLonely"/>
+    <addaction name="actionPickMeUp"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -372,6 +378,36 @@
    </property>
    <property name="toolTip">
     <string>Tell me about bugs so I can squish them!</string>
+   </property>
+  </action>
+  <action name="actionRequestFeature">
+   <property name="text">
+    <string>Request a Feature!</string>
+   </property>
+  </action>
+  <action name="actionComplain">
+   <property name="text">
+    <string>Complain to the Dev!</string>
+   </property>
+  </action>
+  <action name="actionDonate">
+   <property name="text">
+    <string>Donate Money!</string>
+   </property>
+  </action>
+  <action name="actionBored">
+   <property name="text">
+    <string>I'm Bored</string>
+   </property>
+  </action>
+  <action name="actionLonely">
+   <property name="text">
+    <string>I'm Lonely</string>
+   </property>
+  </action>
+  <action name="actionPickMeUp">
+   <property name="text">
+    <string>I Need a Pick-Me-Up</string>
    </property>
   </action>
  </widget>

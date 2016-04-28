@@ -23,6 +23,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
+#include <QTime>
 
 #include "mainwindow.h"
 
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("Ben Reeves");
     QCoreApplication::setApplicationName("asIDE");
-    QCoreApplication::setApplicationVersion("1.0.0");
+    QCoreApplication::setApplicationVersion("Alpha 1.0");
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QCoreApplication::applicationName() +
@@ -42,6 +43,8 @@ int main(int argc, char *argv[])
     parser.addVersionOption();
     parser.addPositionalArgument("file", "The file to open.");
     parser.process(app);
+
+    qsrand(QTime::currentTime().msec());
 
     MainWindow mainWin;
     if (!parser.positionalArguments().isEmpty())
