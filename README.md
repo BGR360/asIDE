@@ -1,7 +1,8 @@
 # asIDE
 An IDE for writing E100 Assembly Code
 
-### [Install asIDE Now!](INSTALLATION.md)
+### [Install asIDE Now!](https://github.com/bgr360/asIDE/releases)
+### [Report a Bug or Request a Feature](https://github.com/bgr360/asIDE/issues)
 
 ## About
 
