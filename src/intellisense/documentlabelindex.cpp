@@ -180,9 +180,11 @@ void DocumentLabelIndex::addLabel(const QString& label, int line, LabelType type
 {
     qDebug() << "adding label:" << label << "at line:" << line;
 
-    // If we already have this label at this line, don't do anything
-    if (hasLabelAtLine(label, line))
+    // If we already have this label at this line, make sure it has the right type
+    if (hasLabelAtLine(label, line)) {
+        mLinesByLabel[label].type = type;
         return;
+    }
 
     // Add this label to our data structures
     LabelInfo newLabelInfo = {line, type};
